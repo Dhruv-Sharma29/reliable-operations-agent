@@ -132,11 +132,11 @@ The macOS code paths (`pg_config` lookup, `ps` instead of `/proc`) are tested on
 README's macOS block says `brew install postgresql@17`; `scripts/setup_postgres.sh` prints
 `brew install postgresql@16` when `pg_config` is missing **[verify]** which one works.
 
-### 24. Old doc paths remain in code comments and one results file
-`agent/llm_agent.py` and `agent/tools/act.py` refer to `docs/architecture.md` and
-`docs/guarantees.md`, and `results/summary/m3-acting.md` to `docs/architecture.md`. Those files are
-now [01-architecture.md](01-architecture.md) and [04-guarantees.md](04-guarantees.md). Code and
-results were left untouched in the docs pass.
+### 24. Doc paths in code comments follow the renumbering
+`agent/llm_agent.py`, `agent/tools/act.py` and `results/summary/m3-acting.md` referred to
+`docs/architecture.md` and `docs/guarantees.md`. On 2026-10-23 those references were changed to
+[01-architecture.md](01-architecture.md) and [04-guarantees.md](04-guarantees.md) (comment and
+path text only; no code or result changed).
 
 ## Deferred, not dropped (behaviour)
 

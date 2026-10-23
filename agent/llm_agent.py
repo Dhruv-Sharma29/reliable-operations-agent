@@ -3,7 +3,7 @@
 A plain loop over the OpenAI-compatible chat API (the project 01 gateway in front of a local
 model), not an agent framework: milestones 3-4 need explicit, persisted state transitions and
 idempotent actions, which are simplest to guarantee in code we control (decision record in
-docs/architecture.md).
+docs/01-architecture.md).
 
 Every tool call is validated against agent/tools/schemas.py before it runs. Read tools go through
 the EvidenceLedger, so each result gets an ID (ev-N); the diagnosis must cite IDs that exist.

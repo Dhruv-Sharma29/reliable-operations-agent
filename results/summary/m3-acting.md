@@ -8,7 +8,7 @@ also have been able to reject.
 
 Runs: `results/raw/20261008T041420Z-llm-act-dev-v2.jsonl`, `20261008T051017Z-llm-act-heldout-v2.jsonl`.
 An earlier run aborted at 6/20 (audit store shared the sandbox database). See
-`results/raw/superseded/README.md` and docs/architecture.md.
+`results/raw/superseded/README.md` and docs/01-architecture.md.
 
 ## Results
 

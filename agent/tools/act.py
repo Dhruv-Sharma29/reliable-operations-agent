@@ -2,7 +2,7 @@
 M3 adds argument schemas and an authorization policy in front of these. M4 adds idempotency at the
 effect boundary: each action takes the executor's `action_id` (never a model argument) and records
 it in the target system together with the effect. A repeat under the same id is a no-op that
-returns `repeat: True`. Each returns {"ok": bool, "detail": ...}. Guarantees: docs/guarantees.md.
+returns `repeat: True`. Each returns {"ok": bool, "detail": ...}. Guarantees: docs/04-guarantees.md.
 """
 
 from __future__ import annotations
