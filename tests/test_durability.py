@@ -132,6 +132,15 @@ def test_crash_after_effect_then_resume_does_not_repeat_it(bad_config):
     assert "reconciling" in audit(action_id) and audit(action_id)[-1] == "succeeded"
 
 
+def test_resume_all_finishes_an_incident_interrupted_by_a_crash(bad_config):
+    """What agent/supervisor.py does at start-up."""
+    incident = workflow.open_incident([{"alert": "Api5xxRateHigh"}])
+    _child(incident, "PROPOSED", approve=True)
+    results = workflow.resume_all(Executor("ops-agent"), client=no_model(), approver=lambda o: "oncall-human")
+    mine = next(r for r in results if r.get("incident_id") == incident)
+    assert mine["state"] == "RESOLVED" and len(rollbacks(workflow.action_id_for(incident))) == 1 and good_config()
+
+
 def test_crash_after_proposal_resumes_without_asking_the_model_again(bad_config):
     incident = workflow.open_incident([{"alert": "Api5xxRateHigh"}])
     _child(incident, "PROPOSED", approve=True)
