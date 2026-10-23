@@ -25,9 +25,11 @@ proposal{tool, args}  ── from the model
 ```
 
 Request and decision are one transaction (`Executor.request`), so no crash leaves an undecided row.
-Every state change also writes an `audit_events` row. In `request`, `approve` and `deny` that row
-shares a transaction with the `actions` update; in `_execute` and `_reconcile` the two are separate
-autocommitted statements, despite the module docstring ([09](09-implementation-notes.md) § 19).
+Every state change also writes an `audit_events` row in the same transaction as the `actions`
+update, on every path (`request`, `approve`, `deny`, `_execute`, `_reconcile`), so the row is never
+ahead of its trail. The last two were separate autocommitted statements until 2026-10-23
+([09](09-implementation-notes.md) § 19); `tests/test_executor.py::test_state_change_and_its_audit_event_commit_together`
+now checks it.
 
 ## Why the order is schema → policy
 

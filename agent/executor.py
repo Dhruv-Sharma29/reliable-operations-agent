@@ -153,11 +153,11 @@ class Executor:
 
     def _reconcile(self, action_id: str, tool: str, args: dict, decision: str) -> Outcome:
         seen = self.observe(tool, args, action_id)
-        with store.connect() as conn:
+        with store.connect() as conn, conn.transaction():
             self._event(conn, action_id, "reconciling", {"effect_observed": seen})
         if seen:
             result = {"ok": True, "detail": "effect observed in the system during reconciliation", "reconciled": True}
-            with store.connect() as conn:
+            with store.connect() as conn, conn.transaction():
                 self._set(conn, action_id, "succeeded", {"result": result, "reconciled": True}, state="succeeded",
                           result=json.dumps(result), finished_at=_now())
             return Outcome(action_id, "succeeded", decision, result)
@@ -166,7 +166,7 @@ class Executor:
         return self._execute(action_id, tool, args, decision, retry=True)
 
     def _execute(self, action_id: str, tool: str, args: dict, decision: str, retry: bool = False) -> Outcome:
-        with store.connect() as conn:
+        with store.connect() as conn, conn.transaction():
             self._set(conn, action_id, "executing", {"retry": True} if retry else None, state="executing",
                       started_at=_now())
         try:
@@ -174,7 +174,7 @@ class Executor:
             state = "succeeded" if result.get("ok") else "failed"
         except AMBIGUOUS as e:
             # The effect may or may not have happened. Record that, then read the system.
-            with store.connect() as conn:
+            with store.connect() as conn, conn.transaction():
                 self._set(conn, action_id, "unknown", {"why": f"{type(e).__name__}: {e}"}, state="unknown")
             if retry:   # reconciled once already and still ambiguous: stop, a human decides
                 return Outcome(action_id, "unknown", decision, f"{type(e).__name__}: {e}")
@@ -184,7 +184,7 @@ class Executor:
         if _after_effect:
             _after_effect(action_id)
         try:
-            with store.connect() as conn:
+            with store.connect() as conn, conn.transaction():
                 self._set(conn, action_id, state, {"result": result}, state=state, result=json.dumps(result, default=str),
                           finished_at=_now())
         except store.AuditUnavailable as e:

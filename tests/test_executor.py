@@ -205,3 +205,20 @@ def test_store_failure_after_the_effect_is_reported_truthfully(monkeypatch):
     monkeypatch.undo()
     assert events(out.action_id)[-1] == "executing"   # what M4 reconciliation will have to repair
 
+
+
+def test_state_change_and_its_audit_event_commit_together(executor, calls, monkeypatch):
+    """A crash between the actions UPDATE and the audit INSERT must not leave the row ahead of its trail."""
+    record = Executor._event
+
+    def crash_on_final(self, conn, action_id, event, detail=None):
+        if event == "succeeded":
+            raise RuntimeError("crash between state update and audit insert (test)")
+        record(self, conn, action_id, event, detail)
+    monkeypatch.setattr(Executor, "_event", crash_on_final)
+    action_id = uuid.uuid4().hex
+    with pytest.raises(RuntimeError):
+        executor.request(incident(), "restart_service", {"service": "worker", "instance": "worker-1"}, action_id=action_id)
+    with store.connect() as conn:
+        state = conn.execute("SELECT state FROM actions WHERE action_id = %s", (action_id,)).fetchone()[0]
+    assert len(calls) == 1 and state == "executing" and events(action_id)[-1] == "executing"

@@ -104,15 +104,20 @@ The runner verifies with its own probe, so `eval/run.py::_durable` passes a stub
 healthy. The workflow's `RESOLVED` in M5 records is therefore not a health verdict; no published
 number uses it ([04](04-guarantees.md) § Where the workflow's own verdict is not used).
 
-### 19. Audit events in `_execute` and `_reconcile` are not in the same transaction as the state update
-Found while writing these docs, by reading the code; not covered by a test. `agent/executor.py`'s
-docstring says every transition is written to the audit log "in the same transaction". That holds
-in `request`, `approve` and `deny` (`conn.transaction()`), but the store connects with
-`autocommit=True`, and `_execute`/`_reconcile` use `with store.connect() as conn:` without a
-transaction, so the `UPDATE actions` and the `INSERT audit_events` commit separately. A crash
-between the two leaves the action row ahead of its audit trail. Safety is unaffected — resume reads
-`actions.state`, which is committed before the effect — but the audit trail can miss one event.
-Fix: wrap those blocks in `conn.transaction()`. Not changed here (docs-only pass).
+### 19. Audit events in `_execute` and `_reconcile` were not in the same transaction as the state update (fixed)
+Found while writing these docs, by reading the code. `agent/executor.py`'s docstring says every
+transition is written to the audit log "in the same transaction". That held in `request`, `approve`
+and `deny` (`conn.transaction()`), but the store connects with `autocommit=True`, and
+`_execute`/`_reconcile` used `with store.connect() as conn:` without a transaction, so the
+`UPDATE actions` and the `INSERT audit_events` committed separately. A crash between the two left
+the action row ahead of its audit trail. Safety was unaffected (resume reads `actions.state`,
+committed before the effect), but the audit trail could miss one event.
+
+**Fixed 2026-10-23:** the five write blocks in `_execute` and `_reconcile` now run in
+`conn.transaction()`. `test_state_change_and_its_audit_event_commit_together` injects a failure
+between the UPDATE and the audit INSERT of the final write and checks that the row stays
+`executing`, matching its trail. On the old code the test fails (row `succeeded`, trail `executing`);
+on the fixed code it passes, and so does the whole suite (99 tests, with PostgreSQL).
 
 ## Honest downgrades
 
