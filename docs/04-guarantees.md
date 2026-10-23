@@ -70,7 +70,9 @@ A timeout from an action (`TimeoutError`, `httpx.TimeoutException`) means *unkno
   after this action, a repeat restarts it again. That's at most one extra restart, never a wrong
   state.
 - **The audit record after a crash is delayed, not lost.** Until resume runs, the action shows
-  `executing`. Nothing runs `resume_all()` automatically yet; a supervisor would call it at start-up.
+  `executing`. `python -m agent.supervisor` resumes every unfinished incident at start-up (added
+  2026-10-23; covered by `test_resume_all_finishes_an_incident_interrupted_by_a_crash`); until it
+  runs, nothing reconciles.
 - **One incident, one remediation.** The workflow proposes a single action per incident (fixed
   step name `remediation`). Multi-step plans would need one id per step.
 - **The agent's store is a single PostgreSQL instance.** It's isolated from the sandbox, but not

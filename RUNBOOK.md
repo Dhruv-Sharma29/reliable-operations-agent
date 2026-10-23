@@ -104,6 +104,15 @@ The crash demo reports "inconclusive" if the model's proposal never reaches an e
 escalates); re-run it. To compare your own runs, copy `results/summary/m5_manifest.json`, point it
 at your files, and run `eval.compare` with `--out` ([start.md](start.md) § 3).
 
+## 6a. Start-up recovery
+
+```bash
+uv run python -m agent.supervisor               # resume every unfinished incident; one JSON line each
+```
+
+Run it after a crash or restart. Actions needing approval keep waiting; approve with
+`Executor("oncall-human").approve(action_id, "oncall-human")`.
+
 ## 7. The audit trace sample
 
 ```bash
@@ -115,6 +124,8 @@ and the crash demo's action (whose id it takes from `results/summary/crash_demo.
 § 6 on the same store. By reading the code (not run), on a fresh store it would fail looking up that
 action. It then generates the forbidden, invalid and denied paths with action functions that fail
 if called, and tries UPDATE, DELETE and TRUNCATE on `audit_events`; it prints `passed` when all are refused.
+Since 2026-10-23 the refusal comes from privileges ("permission denied"), with the trigger behind it;
+the committed sample predates that ([docs/03](docs/03-permissions-and-audit.md)).
 
 ## 8. macOS (Apple silicon)
 

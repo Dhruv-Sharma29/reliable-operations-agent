@@ -59,6 +59,7 @@ the public API and checks capacity and backlog; it never reads the responder's o
 | Executor | `agent/executor.py` | request → decide → approve → execute → reconcile | no |
 | Audit store | `agent/store.py` | `actions` + append-only `audit_events` on a separate PostgreSQL | no |
 | Workflow | `agent/workflow.py` | persisted incident states; resume; `resume_all()` | no |
+| Supervisor | `agent/supervisor.py` | start-up recovery: `resume_all()` for every unfinished incident | no |
 | Scripted baseline | `runbooks/baseline.py`, `runbooks/RUNBOOKS.md` | deterministic rules; also the text of the `runbook` tool | no |
 | Verifier | `eval/verify.py` | independent health verdict | no |
 
@@ -227,7 +228,7 @@ sandbox/      runtime.py (process control + CLI), paths.py (ports, run dirs, PG_
 target_app/   api.py, worker.py, payments.py, bulk_import.py, report_exporter.py, loadgen.py
 incidents/    catalog.py: 10 incidents, inject functions, dev/held-out variants, acceptable actions
 ops/          alerts.py: alert rules
-agent/        llm_agent.py, acting_agent.py, evidence.py, policy.json, policy.py, executor.py, store.py, workflow.py
+agent/        llm_agent.py, acting_agent.py, evidence.py, policy.json, policy.py, executor.py, store.py, workflow.py, supervisor.py
 agent/tools/  schemas.py, read.py, act.py
 runbooks/     RUNBOOKS.md (human text, also the `runbook` tool) and baseline.py (scripted + noop responders)
 eval/         run.py, verify.py, summarize.py, summarize_m2.py, compare.py, report_ui.py,

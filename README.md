@@ -361,8 +361,6 @@ All five planned milestones are complete. What would most change the results:
   - a log search that reports unfiltered counts when a filter matches nothing;
   - flagging diagnoses whose prose names a tool that was never called;
   - checking the action target (one restart hit the wrong worker).
-- **A supervisor** that calls `workflow.resume_all()` at start-up, so crash recovery doesn't need
-  a manual resume.
 - **More cases.** At 30 per responder, only large differences are detectable.
 
 ## Docs

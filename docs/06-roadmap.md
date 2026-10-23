@@ -79,7 +79,7 @@ Ordered by how much each would change the results. None of these is started.
 | Forgiving log search: report unfiltered counts when a `contains` filter matches nothing | v2 searched for `"507 spool quota exceeded"`, got nothing, and called a disk fill a false alarm | `m2-failure-analysis.md` § Lost |
 | Claim check: flag diagnoses whose prose names a tool never called | Seen in `dev-worker_crashed-1`; citation checks can't catch it | `m2-failure-analysis.md` § New failure classes |
 | Action-target check | One restart hit the wrong worker | `m3-acting.md` |
-| A supervisor calling `workflow.resume_all()` at start-up | Crash recovery currently needs a manual resume | [04](04-guarantees.md) § What is NOT guaranteed |
+| ~~A supervisor calling `workflow.resume_all()` at start-up~~ | Done 2026-10-23: `python -m agent.supervisor` | [04](04-guarantees.md) § What is NOT guaranteed |
 | More cases | At 30 per responder only large differences are detectable | [05](05-evaluation.md) § Resolution |
 | Docker Compose backend, OpenTelemetry, cloud deployment with teardown | SPEC items deferred for host reasons | SPEC § Proposed stack, § GX10 and deployment |
 | Hands-on Strands / Agent Framework trial | The decision record chose without one | [01](01-architecture.md) § Decision record |

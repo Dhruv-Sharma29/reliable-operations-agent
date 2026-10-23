@@ -60,8 +60,10 @@ the injection demo runs with **no** approver, which is the case the gate exists 
 
 ### R7 — Identity and append-only are local-sandbox strength *(medium if over-read)*
 
-Requester and approver are strings; loopback PostgreSQL uses trust auth; the `agent` role owns the
-audit tables and could drop their triggers (`sandbox/paths.py::dsn`, `agent/store.py`).
+Requester and approver are strings, and loopback PostgreSQL uses trust auth, so a hostile process on
+the host could connect as the superuser (`sandbox/paths.py::dsn`). The `agent` role itself no longer
+owns the audit tables and can't drop or disable their triggers (2026-10-23, `agent/store.py`,
+[03](03-permissions-and-audit.md)).
 
 **Mitigation:** the triggers protect against the executor's own bugs, and that is what is claimed.
 A deployment needs authenticated principals and a writer role without DDL rights
@@ -69,10 +71,10 @@ A deployment needs authenticated principals and a writer role without DDL rights
 
 ## Delivery risks
 
-### R8 — A crash leaves an action in `executing` until someone resumes it *(medium)*
+### R8 — A crash leaves an action in `executing` until the supervisor runs *(low)*
 
-Nothing calls `workflow.resume_all()` automatically. **Mitigation:** documented as a limit; the
-supervisor is the first durability item in [06](06-roadmap.md) § Next.
+`python -m agent.supervisor` calls `workflow.resume_all()` at start-up (2026-10-23). **Remaining:**
+something has to start it (a service manager or the next deploy); there is no watchdog in this repo.
 
 ### R9 — Single-instance agent store *(low in the sandbox)*
 

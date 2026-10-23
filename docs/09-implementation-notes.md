@@ -143,14 +143,26 @@ README's macOS block says `brew install postgresql@17`; `scripts/setup_postgres.
 [01-architecture.md](01-architecture.md) and [04-guarantees.md](04-guarantees.md) (comment and
 path text only; no code or result changed).
 
+### 25. The agent role owned its own audit log (fixed 2026-10-23)
+The `agent` role owned `agentstate` and applied the schema itself, so the agent's own connection
+could drop or disable the append-only triggers, or drop `audit_events` outright (shown by running
+the new tests on the old code). The database and tables now belong to `audit_owner` (no login),
+the cluster superuser applies the schema (`store.apply_schema`), and the agent gets only the row
+privileges it needs ([03](03-permissions-and-audit.md) § Least privilege for the agent role). Not
+covered: a hostile process on the same host can still connect as the superuser through trust auth.
+
+### 26. A supervisor resumes unfinished incidents (added 2026-10-23)
+Crash recovery used to need a manual `workflow.run(...)` per incident; `resume_all()` existed but
+nothing called it, and no test covered it. `python -m agent.supervisor` calls it at start-up, and
+one incident failing no longer stops the others.
+`test_resume_all_finishes_an_incident_interrupted_by_a_crash` crashes a workflow after the proposal
+and resumes it through `resume_all()`.
+
 ## Deferred, not dropped (behaviour)
 
-### 25. No supervisor runs `workflow.resume_all()`
-Crash recovery works, but needs a manual resume. A supervisor would call it at start-up.
-
-### 26. One remediation step per incident
+### 27. One remediation step per incident
 The action id is `uuid5(incident, "remediation")`. Multi-step plans need one id per step.
 
-### 27. No cloud deployment
+### 28. No cloud deployment
 SPEC § GX10 and deployment suggests an AWS or Azure deployment with narrow permissions and teardown
 instructions. Not started.

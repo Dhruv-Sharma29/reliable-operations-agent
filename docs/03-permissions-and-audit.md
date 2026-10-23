@@ -91,11 +91,22 @@ per statement on `audit_events` (row triggers do not fire on TRUNCATE, hence the
 `eval/audit_sample.py` tries all three against the live store; all three were refused
 (`results/summary/audit_trace_sample.json` § `append_only`).
 
-**What append-only does not cover.** The role `agent` owns `agentstate` and applies the schema
-itself (`store.ensure`), and loopback connections use trust auth (`sandbox/paths.py::dsn`). The
-triggers stop the executor's own code — or a bug in it — from rewriting history; they do not stop
-a compromised agent process, which could drop the trigger. The production equivalent is a separate
-writer role without DDL rights, or an external log sink.
+**Least privilege for the agent role (2026-10-23).** The database and its tables belong to
+`audit_owner`, a role that can't log in; the cluster superuser applies the schema
+(`store.apply_schema`); the `agent` role may append audit and incident events and update `actions`
+and `incidents`, nothing more. So the agent's own connection can't UPDATE, DELETE or TRUNCATE the
+logs, and can't drop or disable the triggers or drop the tables: only an owner can, and
+`tests/test_executor.py::test_audit_log_is_append_only` checks all six attempts. Before this change
+the `agent` role owned everything, and the same test on the old code shows `DROP TRIGGER` and
+`DROP TABLE audit_events` succeeding. The trigger stays as a second layer
+(`test_append_only_trigger_still_guards_the_owner_side`). `results/summary/audit_trace_sample.json`
+predates the change; a re-run reports "permission denied" rather than the trigger's message.
+
+**What it still does not cover.** Loopback connections use trust auth (`sandbox/paths.py::dsn`), and
+the agent and the setup code run as the same OS user, so a fully compromised agent process could
+still connect as the cluster superuser. The change protects against bugs and injected SQL on the
+agent's own connection, not against a hostile process on the same host. That needs a separate OS
+user for the store, password or certificate auth, or an external log sink.
 
 **Fail closed.** Any failure to reach the store raises `store.AuditUnavailable`. Because request,
 decision and `executing` are all written before the effect, an unreachable store means nothing
