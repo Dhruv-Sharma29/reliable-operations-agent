@@ -42,7 +42,7 @@ flowchart LR
     VER --> SCORE[Score: diagnosis,<br/>actions, verified health]
 ```
 
-Details, the incident table and design decisions: [docs/architecture.md](docs/architecture.md).
+Details, the incident table and design decisions: [docs/01-architecture.md](docs/01-architecture.md).
 
 ## Results (milestone 1)
 
@@ -162,7 +162,7 @@ The model only **proposes** a tool name and arguments. `agent/executor.py` decid
 5. The audit store runs on its **own PostgreSQL instance**, outside the sandbox. It **fails
    closed**: no reachable audit store, no action. It used to share the sandbox's database, so a
    connection-exhaustion incident disabled the agent's control plane and crashed the evaluation
-   ([decision record](docs/architecture.md)).
+   ([decision record](docs/01-architecture.md)).
 
 **Audit trace sample** (`eval/audit_sample.py`, [output](results/summary/audit_trace_sample.json)):
 full action records and timestamped events, read back from the store, for every path:
@@ -233,7 +233,7 @@ A test demonstrates the config hazard.
 Tested by killing real processes (`os._exit`, no clean-up) between an effect and its record, and
 after the proposal is stored. Each test counts the effect in the target system, not in the agent's
 records. Disabling idempotency makes these tests fail (mutation check). Guarantees and their limits:
-[docs/guarantees.md](docs/guarantees.md).
+[docs/04-guarantees.md](docs/04-guarantees.md).
 
 **Live crash demo with the real model** (`eval/crash_demo.py`, `results/summary/crash_demo.json`):
 1. Real bad-config incident. The model diagnosed `bad_config` and proposed `rollback_config`; the
@@ -362,6 +362,14 @@ All five planned milestones are complete. What would most change the results:
 - **A supervisor** that calls `workflow.resume_all()` at start-up, so crash recovery doesn't need
   a manual resume.
 - **More cases.** At 30 per responder, only large differences are detectable.
+
+## Docs
+
+- [start.md](start.md): check the published numbers offline, with no database or model running.
+- [RUNBOOK.md](RUNBOOK.md): the steps that need PostgreSQL running or a model server.
+- [docs/](docs/README.md): the design record, in reading order: charter, architecture,
+  investigation, permissions and audit, execution guarantees, evaluation, roadmap, risks,
+  learning checklist, implementation notes.
 
 Planning documents: [SPEC.md](SPEC.md) · [PLAN.md](PLAN.md)
 

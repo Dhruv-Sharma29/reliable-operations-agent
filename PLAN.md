@@ -41,7 +41,7 @@ Brief: [SPEC.md](SPEC.md). The value is **correct, auditable, non-repeating acti
   durability buys crash safety, not accuracy). Schema-enforced final answer: 0 of 30 diagnoses lost.
 - **M4 done.** Live crash demo with the real model passed (`results/summary/crash_demo.json`). Idempotent actions keyed by an
   executor-chosen action id recorded with the effect, a persisted incident workflow that resumes
-  without re-asking the model, timeout reconciliation, and `docs/guarantees.md`.
+  without re-asking the model, timeout reconciliation, and [`docs/04-guarantees.md`](docs/04-guarantees.md).
   - **Proof:** 8 durability tests kill real processes between effect and record. A mutation check
     confirmed they fail when idempotency is removed.
 - **M2 v2 (prompt tuned on dev):** 12/20 dev, 5/10 held-out. **No demonstrated improvement**
@@ -59,7 +59,7 @@ Brief: [SPEC.md](SPEC.md). The value is **correct, auditable, non-repeating acti
 - **Exit:** every incident reproduces on demand and the scripted baseline's results are recorded.
 
 ### M2 — Read-only agent (1 week)
-- [x] Decision gate: plain Python loop chosen (docs/architecture.md). A hands-on trial of Strands / Agent Framework was **not** done; the decision record says why.
+- [x] Decision gate: plain Python loop chosen ([docs/01-architecture.md](docs/01-architecture.md)). A hands-on trial of Strands / Agent Framework was **not** done; the decision record says why.
 - [x] Agent gets read tools only. Output: structured diagnosis `{incident_type, evidence: [ref], confidence, unknowns}`.
 - [x] Scorer compares diagnosis to ground truth; evidence refs must point to real log/metric entries.
 - [x] Prompt v2 / submit budget fix, tuned on dev only, then one held-out run (no demonstrated gain).
@@ -78,7 +78,7 @@ Built as `agent/workflow.py`. AUTHORIZED lives in the executor's action states; 
 - [x] Persist state transition + `action_id` **before** executing an effect.
 - [x] Idempotency at the effect boundary: the action tool records `action_id` in the target system (or checks observable state) so re-execution is a no-op.
 - [x] Ambiguous completion (timeout): reconcile by reading actual service state before any retry.
-- [x] Write `docs/guarantees.md`: which actions are naturally idempotent, which are made idempotent, what remains at-least-once.
+- [x] Write [`docs/04-guarantees.md`](docs/04-guarantees.md): which actions are naturally idempotent, which are made idempotent, what remains at-least-once.
 
 Tests:
 - [x] Kill workflow after action succeeds, before result recorded → resume does not repeat effect.
@@ -104,6 +104,6 @@ Tests:
 - [x] 3-way comparison on held-out cases (`results/summary/m5-comparison.md`)
 - [x] Failed scenarios published (per-case evidence in `results/ui/m5_report.html`; `results/summary/m2-failure-analysis.md`; superseded runs kept in `results/raw/superseded/`)
 - [x] Audit trace sample (`results/summary/audit_trace_sample.json`, from `eval/audit_sample.py`: every executor path plus append-only check)
-- [x] `docs/guarantees.md`
+- [x] [`docs/04-guarantees.md`](docs/04-guarantees.md)
 
 **Closed 2026-10-08.**
