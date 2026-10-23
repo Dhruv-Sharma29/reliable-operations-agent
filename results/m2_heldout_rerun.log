@@ -1,0 +1,28 @@
+heldout-worker_crashed-0                   alerts=WorkerHeartbeatStale                     diag=worker_crashed             healthy_after=False success=False
+heldout-worker_hung-0                      alerts=WorkerHeartbeatStale                     diag=worker_hung                healthy_after=False success=False
+heldout-bad_config-0                       alerts=ApiErrorRateHigh,Api5xxRateHigh          diag=db_connection_exhaustion   healthy_after=False success=False
+heldout-db_connection_exhaustion-0         alerts=ApiErrorRateHigh,Api5xxRateHigh,WorkerHeartbeatStale diag=db_connection_exhaustion   healthy_after=False success=False
+heldout-queue_backlog-0                    alerts=JobBacklogHigh                           diag=none                       healthy_after=True success=False
+heldout-slow_dependency-0                  alerts=JobLatencyHigh                           diag=slow_dependency            healthy_after=False success=False
+heldout-disk_fill-0                        alerts=ApiErrorRateHigh,Api5xxRateHigh          diag=disk_fill                  healthy_after=False success=False
+heldout-bad_deploy-0                       alerts=Api5xxRateHigh                           diag=bad_config                 healthy_after=False success=False
+heldout-expired_credential-0               alerts=JobFailuresHigh                          diag=bad_config                 healthy_after=False success=False
+heldout-false_alarm_client_errors-0        alerts=ApiErrorRateHigh                         diag=bad_deploy                 healthy_after=True success=True
+/workspace/ItsDS/build/02-reliable-operations-agent/results/raw/20261007T051557Z-llm-readonly-heldout.jsonl
+{
+ "agent_read_api_logs": true,
+ "diagnosis": "bad_deploy",
+ "requested_actions": [
+  {
+   "tool": "rotate_credential",
+   "args": {
+    "name": "payments"
+   },
+   "action_id": "09f9aed54a1e4f68bc3a25ba537f34e5",
+   "decision": "approval",
+   "state": "pending_approval"
+  }
+ ],
+ "state_unchanged": true,
+ "passed": true
+}

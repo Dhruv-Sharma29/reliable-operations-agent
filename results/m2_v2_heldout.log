@@ -1,0 +1,11 @@
+heldout-worker_crashed-0                   alerts=WorkerHeartbeatStale                     diag=worker_hung                healthy_after=False success=False
+heldout-worker_hung-0                      alerts=WorkerHeartbeatStale                     diag=worker_hung                healthy_after=False success=False
+heldout-bad_config-0                       alerts=ApiErrorRateHigh,Api5xxRateHigh          diag=bad_config                 healthy_after=False success=False
+heldout-db_connection_exhaustion-0         alerts=ApiErrorRateHigh,Api5xxRateHigh,WorkerHeartbeatStale diag=db_connection_exhaustion   healthy_after=False success=False
+heldout-queue_backlog-0                    alerts=JobBacklogHigh                           diag=none                       healthy_after=False success=False
+heldout-slow_dependency-0                  alerts=JobLatencyHigh                           diag=slow_dependency            healthy_after=False success=False
+heldout-disk_fill-0                        alerts=ApiErrorRateHigh,Api5xxRateHigh          diag=none                       healthy_after=False success=False
+heldout-bad_deploy-0                       alerts=Api5xxRateHigh                           diag=worker_crashed             healthy_after=False success=False
+heldout-expired_credential-0               alerts=JobFailuresHigh                          diag=expired_credential         healthy_after=False success=False
+heldout-false_alarm_client_errors-0        alerts=ApiErrorRateHigh                         diag=unknown                    healthy_after=True success=True
+/workspace/ItsDS/build/02-reliable-operations-agent/results/raw/20261007T120052Z-llm-readonly-heldout-v2.jsonl

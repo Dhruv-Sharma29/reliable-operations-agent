@@ -1,0 +1,443 @@
+{
+ "store": "database agentstate on the agent's own PostgreSQL (port 18433)",
+ "recorded": {
+  "allowed_succeeded": {
+   "action": {
+    "action_id": "2981ccb7c0ba5998b4078858a9fd0253",
+    "incident_id": "inc-3d0acce86132",
+    "tool": "cleanup_spool",
+    "args": {
+     "pattern": "*.tmp"
+    },
+    "requested_by": "ops-agent",
+    "decision": "allow",
+    "rule": "cleanup_spool",
+    "policy_version": 1,
+    "state": "succeeded",
+    "approver": null,
+    "reason": "only *.tmp files, enforced by schema and action",
+    "result": {
+     "ok": true,
+     "detail": "removed 30 files"
+    },
+    "requested_at": "2026-10-08 10:25:09.845366+00:00",
+    "decided_at": "2026-10-08 10:25:09.845957+00:00",
+    "approved_at": null,
+    "started_at": "2026-10-08 10:25:09.849497+00:00",
+    "finished_at": "2026-10-08 10:25:09.855886+00:00"
+   },
+   "events": [
+    {
+     "id": 331,
+     "at": "2026-10-08 10:25:09.845763+00:00",
+     "event": "requested",
+     "detail": {
+      "by": "ops-agent",
+      "args": {
+       "pattern": "*.tmp"
+      },
+      "tool": "cleanup_spool"
+     }
+    },
+    {
+     "id": 332,
+     "at": "2026-10-08 10:25:09.846597+00:00",
+     "event": "authorized",
+     "detail": {
+      "rule": "cleanup_spool"
+     }
+    },
+    {
+     "id": 333,
+     "at": "2026-10-08 10:25:09.851298+00:00",
+     "event": "executing",
+     "detail": {}
+    },
+    {
+     "id": 334,
+     "at": "2026-10-08 10:25:09.857692+00:00",
+     "event": "succeeded",
+     "detail": {
+      "result": {
+       "ok": true,
+       "detail": "removed 30 files"
+      }
+     }
+    }
+   ]
+  },
+  "approved_succeeded": {
+   "action": {
+    "action_id": "e129c74c63b051a29a07762bc6974361",
+    "incident_id": "inc-6999c7c24c3d",
+    "tool": "rotate_credential",
+    "args": {
+     "name": "payments"
+    },
+    "requested_by": "ops-agent",
+    "decision": "approval",
+    "rule": "rotate_credential:payments",
+    "policy_version": 1,
+    "state": "succeeded",
+    "approver": "eval-approver",
+    "reason": "touches a secret and an external provider",
+    "result": {
+     "ok": true,
+     "detail": "issued new payments token and updated the secret store"
+    },
+    "requested_at": "2026-10-08 10:26:06.727033+00:00",
+    "decided_at": "2026-10-08 10:26:06.727601+00:00",
+    "approved_at": "2026-10-08 10:26:06.732984+00:00",
+    "started_at": "2026-10-08 10:26:06.737773+00:00",
+    "finished_at": "2026-10-08 10:26:06.756826+00:00"
+   },
+   "events": [
+    {
+     "id": 340,
+     "at": "2026-10-08 10:26:06.727417+00:00",
+     "event": "requested",
+     "detail": {
+      "by": "ops-agent",
+      "args": {
+       "name": "payments"
+      },
+      "tool": "rotate_credential"
+     }
+    },
+    {
+     "id": 341,
+     "at": "2026-10-08 10:26:06.728335+00:00",
+     "event": "pending_approval",
+     "detail": {
+      "rule": "rotate_credential:payments"
+     }
+    },
+    {
+     "id": 342,
+     "at": "2026-10-08 10:26:06.733497+00:00",
+     "event": "approved",
+     "detail": {
+      "by": "eval-approver"
+     }
+    },
+    {
+     "id": 343,
+     "at": "2026-10-08 10:26:06.739724+00:00",
+     "event": "executing",
+     "detail": {}
+    },
+    {
+     "id": 344,
+     "at": "2026-10-08 10:26:06.759211+00:00",
+     "event": "succeeded",
+     "detail": {
+      "result": {
+       "ok": true,
+       "detail": "issued new payments token and updated the secret store"
+      }
+     }
+    }
+   ]
+  },
+  "approved_failed": {
+   "action": {
+    "action_id": "a61fe9e5863a57adbfad8253b64f0450",
+    "incident_id": "inc-aab940409e9d",
+    "tool": "rollback_release",
+    "args": {},
+    "requested_by": "ops-agent",
+    "decision": "approval",
+    "rule": "rollback_release",
+    "policy_version": 1,
+    "state": "failed",
+    "approver": "eval-approver",
+    "reason": "changes the deployed version",
+    "result": {
+     "ok": false,
+     "detail": "no previous release"
+    },
+    "requested_at": "2026-10-08 10:20:43.516219+00:00",
+    "decided_at": "2026-10-08 10:20:43.517056+00:00",
+    "approved_at": "2026-10-08 10:20:43.522585+00:00",
+    "started_at": "2026-10-08 10:20:43.526436+00:00",
+    "finished_at": "2026-10-08 10:20:43.532456+00:00"
+   },
+   "events": [
+    {
+     "id": 317,
+     "at": "2026-10-08 10:20:43.516751+00:00",
+     "event": "requested",
+     "detail": {
+      "by": "ops-agent",
+      "args": {},
+      "tool": "rollback_release"
+     }
+    },
+    {
+     "id": 318,
+     "at": "2026-10-08 10:20:43.517693+00:00",
+     "event": "pending_approval",
+     "detail": {
+      "rule": "rollback_release"
+     }
+    },
+    {
+     "id": 319,
+     "at": "2026-10-08 10:20:43.523165+00:00",
+     "event": "approved",
+     "detail": {
+      "by": "eval-approver"
+     }
+    },
+    {
+     "id": 320,
+     "at": "2026-10-08 10:20:43.528616+00:00",
+     "event": "executing",
+     "detail": {}
+    },
+    {
+     "id": 321,
+     "at": "2026-10-08 10:20:43.534671+00:00",
+     "event": "failed",
+     "detail": {
+      "result": {
+       "ok": false,
+       "detail": "no previous release"
+      }
+     }
+    }
+   ]
+  },
+  "crash_reconciled": {
+   "action": {
+    "action_id": "c86cfc68a17556cf91976f86fd969dfa",
+    "incident_id": "inc-077b827d4fc7",
+    "tool": "rollback_config",
+    "args": {},
+    "requested_by": "ops-agent",
+    "decision": "approval",
+    "rule": "rollback_config",
+    "policy_version": 1,
+    "state": "succeeded",
+    "approver": "demo-approver",
+    "reason": "changes production configuration",
+    "result": {
+     "ok": true,
+     "detail": "effect observed in the system during reconciliation",
+     "reconciled": true
+    },
+    "requested_at": "2026-10-08 05:47:29.971535+00:00",
+    "decided_at": "2026-10-08 05:47:29.971953+00:00",
+    "approved_at": "2026-10-08 05:47:29.978229+00:00",
+    "started_at": "2026-10-08 05:47:29.983661+00:00",
+    "finished_at": "2026-10-08 05:47:31.128973+00:00"
+   },
+   "events": [
+    {
+     "id": 109,
+     "at": "2026-10-08 05:47:29.971796+00:00",
+     "event": "requested",
+     "detail": {
+      "by": "ops-agent",
+      "args": {},
+      "tool": "rollback_config"
+     }
+    },
+    {
+     "id": 110,
+     "at": "2026-10-08 05:47:29.972537+00:00",
+     "event": "pending_approval",
+     "detail": {
+      "rule": "rollback_config"
+     }
+    },
+    {
+     "id": 111,
+     "at": "2026-10-08 05:47:29.978936+00:00",
+     "event": "approved",
+     "detail": {
+      "by": "demo-approver"
+     }
+    },
+    {
+     "id": 112,
+     "at": "2026-10-08 05:47:29.985655+00:00",
+     "event": "executing",
+     "detail": {}
+    },
+    {
+     "id": 113,
+     "at": "2026-10-08 05:47:31.125076+00:00",
+     "event": "reconciling",
+     "detail": {
+      "effect_observed": true
+     }
+    },
+    {
+     "id": 114,
+     "at": "2026-10-08 05:47:31.132105+00:00",
+     "event": "succeeded",
+     "detail": {
+      "result": {
+       "ok": true,
+       "detail": "effect observed in the system during reconciliation",
+       "reconciled": true
+      },
+      "reconciled": true
+     }
+    }
+   ]
+  }
+ },
+ "generated": {
+  "forbidden": {
+   "action": {
+    "action_id": "b67d40706cf64a81b09783dfa5d22558",
+    "incident_id": "audit-sample-bca60d0a",
+    "tool": "drop_table",
+    "args": {
+     "table": "payments"
+    },
+    "requested_by": "ops-agent",
+    "decision": "forbid",
+    "rule": null,
+    "policy_version": null,
+    "state": "rejected",
+    "approver": null,
+    "reason": "not an action tool",
+    "result": null,
+    "requested_at": "2026-10-08 10:50:18.013229+00:00",
+    "decided_at": "2026-10-08 10:50:18.013480+00:00",
+    "approved_at": null,
+    "started_at": null,
+    "finished_at": null
+   },
+   "events": [
+    {
+     "id": 345,
+     "at": "2026-10-08 10:50:18.013421+00:00",
+     "event": "requested",
+     "detail": {
+      "by": "ops-agent",
+      "args": {
+       "table": "payments"
+      },
+      "tool": "drop_table"
+     }
+    },
+    {
+     "id": 346,
+     "at": "2026-10-08 10:50:18.013764+00:00",
+     "event": "rejected",
+     "detail": {
+      "why": "not an action tool"
+     }
+    }
+   ]
+  },
+  "invalid": {
+   "action": {
+    "action_id": "01f2e0d665904843a7e3867585647710",
+    "incident_id": "audit-sample-bca60d0a",
+    "tool": "restart_service",
+    "args": {
+     "service": "api",
+     "approved": true
+    },
+    "requested_by": "ops-agent",
+    "decision": "invalid",
+    "rule": null,
+    "policy_version": null,
+    "state": "rejected",
+    "approver": null,
+    "reason": "(args): Additional properties are not allowed ('approved' was unexpected)",
+    "result": null,
+    "requested_at": "2026-10-08 10:50:18.018639+00:00",
+    "decided_at": "2026-10-08 10:50:18.019155+00:00",
+    "approved_at": null,
+    "started_at": null,
+    "finished_at": null
+   },
+   "events": [
+    {
+     "id": 347,
+     "at": "2026-10-08 10:50:18.018994+00:00",
+     "event": "requested",
+     "detail": {
+      "by": "ops-agent",
+      "args": {
+       "service": "api",
+       "approved": true
+      },
+      "tool": "restart_service"
+     }
+    },
+    {
+     "id": 348,
+     "at": "2026-10-08 10:50:18.019941+00:00",
+     "event": "rejected",
+     "detail": {
+      "why": "(args): Additional properties are not allowed ('approved' was unexpected)"
+     }
+    }
+   ]
+  },
+  "denied": {
+   "action": {
+    "action_id": "1c6e55ed3b424bdba3f8c19380873e65",
+    "incident_id": "audit-sample-bca60d0a",
+    "tool": "rollback_release",
+    "args": {},
+    "requested_by": "ops-agent",
+    "decision": "approval",
+    "rule": "rollback_release",
+    "policy_version": 1,
+    "state": "denied",
+    "approver": "audit-sample-approver",
+    "reason": "no evidence the release is at fault",
+    "result": null,
+    "requested_at": "2026-10-08 10:50:18.023735+00:00",
+    "decided_at": "2026-10-08 10:50:18.024080+00:00",
+    "approved_at": null,
+    "started_at": null,
+    "finished_at": "2026-10-08 10:50:18.031935+00:00"
+   },
+   "events": [
+    {
+     "id": 349,
+     "at": "2026-10-08 10:50:18.024000+00:00",
+     "event": "requested",
+     "detail": {
+      "by": "ops-agent",
+      "args": {},
+      "tool": "rollback_release"
+     }
+    },
+    {
+     "id": 350,
+     "at": "2026-10-08 10:50:18.024428+00:00",
+     "event": "pending_approval",
+     "detail": {
+      "rule": "rollback_release"
+     }
+    },
+    {
+     "id": 351,
+     "at": "2026-10-08 10:50:18.032130+00:00",
+     "event": "denied",
+     "detail": {
+      "by": "audit-sample-approver",
+      "reason": "no evidence the release is at fault"
+     }
+    }
+   ],
+   "self_approval_attempt": "refused: the requester cannot approve its own action"
+  }
+ },
+ "append_only": {
+  "update": "refused: audit_events is append-only",
+  "delete": "refused: audit_events is append-only",
+  "truncate": "refused: audit_events is append-only"
+ },
+ "result": "passed"
+}

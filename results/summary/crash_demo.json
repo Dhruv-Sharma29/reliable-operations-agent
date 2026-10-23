@@ -1,0 +1,72 @@
+{
+ "incident": "inc-077b827d4fc7",
+ "alerts": [
+  {
+   "alert": "ApiErrorRateHigh",
+   "detail": "84/84 requests >= 400 in 60s"
+  },
+  {
+   "alert": "Api5xxRateHigh",
+   "detail": "84/84 requests 5xx in 60s"
+  }
+ ],
+ "child_exit": 137,
+ "child_seconds": 123.5,
+ "state_after_crash": "EXECUTING",
+ "diagnosis": "bad_config",
+ "proposal": {
+  "args": {},
+  "tool": "rollback_config",
+  "action_id": "c86cfc68a17556cf91976f86fd969dfa"
+ },
+ "after_crash": {
+  "effects": {
+   "config_records": 1,
+   "deploy_records": 0,
+   "secret_written": false,
+   "api_started_by_action": true
+  },
+  "audit": [
+   "requested",
+   "pending_approval",
+   "approved",
+   "executing"
+  ]
+ },
+ "after_resume": {
+  "state": "RESOLVED",
+  "effects": {
+   "config_records": 1,
+   "deploy_records": 0,
+   "secret_written": false,
+   "api_started_by_action": true
+  },
+  "audit": [
+   "requested",
+   "pending_approval",
+   "approved",
+   "executing",
+   "reconciling",
+   "succeeded"
+  ],
+  "resume_seconds": 1.2,
+  "model_calls": 0,
+  "config_ok": true,
+  "verified": {
+   "healthy": true,
+   "reason": "probes completed at full capacity",
+   "rounds": 2,
+   "elapsed_s": 1.1
+  }
+ },
+ "result": "passed: effect happened once, resumed without the model, incident RESOLVED",
+ "history": [
+  "OPEN",
+  "INVESTIGATING",
+  "DIAGNOSED",
+  "PROPOSED",
+  "EXECUTING",
+  "VERIFYING",
+  "RESOLVED"
+ ]
+}

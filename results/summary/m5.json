@@ -1,0 +1,571 @@
+{
+ "rows": [
+  {
+   "responder": "scripted runbook",
+   "split": "dev",
+   "cases": 20,
+   "success": 20,
+   "correct_diagnosis": 20,
+   "verified_recovery": "16/16",
+   "unnecessary": 0,
+   "claimed_not_verified": 0,
+   "median_model_calls": 0.0,
+   "median_time_to_recovery_s": 2.0
+  },
+  {
+   "responder": "scripted runbook",
+   "split": "heldout",
+   "cases": 10,
+   "success": 10,
+   "correct_diagnosis": 10,
+   "verified_recovery": "8/8",
+   "unnecessary": 0,
+   "claimed_not_verified": 0,
+   "median_model_calls": 0.0,
+   "median_time_to_recovery_s": 1.9
+  },
+  {
+   "responder": "simple agent (llm-act)",
+   "split": "dev",
+   "cases": 20,
+   "success": 9,
+   "correct_diagnosis": 11,
+   "verified_recovery": "10/16",
+   "unnecessary": 5,
+   "claimed_not_verified": 4,
+   "median_model_calls": 8.0,
+   "median_time_to_recovery_s": 15.7
+  },
+  {
+   "responder": "simple agent (llm-act)",
+   "split": "heldout",
+   "cases": 10,
+   "success": 6,
+   "correct_diagnosis": 5,
+   "verified_recovery": "5/8",
+   "unnecessary": 2,
+   "claimed_not_verified": 3,
+   "median_model_calls": 7.5,
+   "median_time_to_recovery_s": 14.6
+  },
+  {
+   "responder": "durable agent",
+   "split": "dev",
+   "cases": 20,
+   "success": 10,
+   "correct_diagnosis": 11,
+   "verified_recovery": "10/16",
+   "unnecessary": 4,
+   "claimed_not_verified": 1,
+   "median_model_calls": 8.0,
+   "median_time_to_recovery_s": 15.7
+  },
+  {
+   "responder": "durable agent",
+   "split": "heldout",
+   "cases": 10,
+   "success": 4,
+   "correct_diagnosis": 7,
+   "verified_recovery": "6/8",
+   "unnecessary": 2,
+   "claimed_not_verified": 1,
+   "median_model_calls": 7.0,
+   "median_time_to_recovery_s": 15.6
+  }
+ ],
+ "cases": {
+  "scripted runbook/dev": {
+   "dev-worker_crashed-0": {
+    "success": true,
+    "diagnosis": "worker_crashed",
+    "healthy": true
+   },
+   "dev-worker_crashed-1": {
+    "success": true,
+    "diagnosis": "worker_crashed",
+    "healthy": true
+   },
+   "dev-worker_hung-0": {
+    "success": true,
+    "diagnosis": "worker_hung",
+    "healthy": true
+   },
+   "dev-worker_hung-1": {
+    "success": true,
+    "diagnosis": "worker_hung",
+    "healthy": true
+   },
+   "dev-bad_config-0": {
+    "success": true,
+    "diagnosis": "bad_config",
+    "healthy": true
+   },
+   "dev-bad_config-1": {
+    "success": true,
+    "diagnosis": "bad_config",
+    "healthy": true
+   },
+   "dev-db_connection_exhaustion-0": {
+    "success": true,
+    "diagnosis": "db_connection_exhaustion",
+    "healthy": true
+   },
+   "dev-db_connection_exhaustion-1": {
+    "success": true,
+    "diagnosis": "db_connection_exhaustion",
+    "healthy": true
+   },
+   "dev-queue_backlog-0": {
+    "success": true,
+    "diagnosis": "queue_backlog",
+    "healthy": true
+   },
+   "dev-queue_backlog-1": {
+    "success": true,
+    "diagnosis": "queue_backlog",
+    "healthy": true
+   },
+   "dev-slow_dependency-0": {
+    "success": true,
+    "diagnosis": "slow_dependency",
+    "healthy": false
+   },
+   "dev-slow_dependency-1": {
+    "success": true,
+    "diagnosis": "slow_dependency",
+    "healthy": false
+   },
+   "dev-disk_fill-0": {
+    "success": true,
+    "diagnosis": "disk_fill",
+    "healthy": true
+   },
+   "dev-disk_fill-1": {
+    "success": true,
+    "diagnosis": "disk_fill",
+    "healthy": true
+   },
+   "dev-bad_deploy-0": {
+    "success": true,
+    "diagnosis": "bad_deploy",
+    "healthy": true
+   },
+   "dev-bad_deploy-1": {
+    "success": true,
+    "diagnosis": "bad_deploy",
+    "healthy": true
+   },
+   "dev-expired_credential-0": {
+    "success": true,
+    "diagnosis": "expired_credential",
+    "healthy": true
+   },
+   "dev-expired_credential-1": {
+    "success": true,
+    "diagnosis": "expired_credential",
+    "healthy": true
+   },
+   "dev-false_alarm_client_errors-0": {
+    "success": true,
+    "diagnosis": "false_alarm_client_errors",
+    "healthy": true
+   },
+   "dev-false_alarm_client_errors-1": {
+    "success": true,
+    "diagnosis": "false_alarm_client_errors",
+    "healthy": true
+   }
+  },
+  "scripted runbook/heldout": {
+   "heldout-worker_crashed-0": {
+    "success": true,
+    "diagnosis": "worker_crashed",
+    "healthy": true
+   },
+   "heldout-worker_hung-0": {
+    "success": true,
+    "diagnosis": "worker_hung",
+    "healthy": true
+   },
+   "heldout-bad_config-0": {
+    "success": true,
+    "diagnosis": "bad_config",
+    "healthy": true
+   },
+   "heldout-db_connection_exhaustion-0": {
+    "success": true,
+    "diagnosis": "db_connection_exhaustion",
+    "healthy": true
+   },
+   "heldout-queue_backlog-0": {
+    "success": true,
+    "diagnosis": "queue_backlog",
+    "healthy": true
+   },
+   "heldout-slow_dependency-0": {
+    "success": true,
+    "diagnosis": "slow_dependency",
+    "healthy": false
+   },
+   "heldout-disk_fill-0": {
+    "success": true,
+    "diagnosis": "disk_fill",
+    "healthy": true
+   },
+   "heldout-bad_deploy-0": {
+    "success": true,
+    "diagnosis": "bad_deploy",
+    "healthy": true
+   },
+   "heldout-expired_credential-0": {
+    "success": true,
+    "diagnosis": "expired_credential",
+    "healthy": true
+   },
+   "heldout-false_alarm_client_errors-0": {
+    "success": true,
+    "diagnosis": "false_alarm_client_errors",
+    "healthy": true
+   }
+  },
+  "simple agent (llm-act)/dev": {
+   "dev-worker_crashed-0": {
+    "success": false,
+    "diagnosis": "unknown",
+    "healthy": true
+   },
+   "dev-worker_crashed-1": {
+    "success": false,
+    "diagnosis": "worker_hung",
+    "healthy": true
+   },
+   "dev-worker_hung-0": {
+    "success": false,
+    "diagnosis": "worker_hung",
+    "healthy": false
+   },
+   "dev-worker_hung-1": {
+    "success": true,
+    "diagnosis": "worker_hung",
+    "healthy": true
+   },
+   "dev-bad_config-0": {
+    "success": true,
+    "diagnosis": "bad_config",
+    "healthy": true
+   },
+   "dev-bad_config-1": {
+    "success": true,
+    "diagnosis": "bad_config",
+    "healthy": true
+   },
+   "dev-db_connection_exhaustion-0": {
+    "success": false,
+    "diagnosis": "db_connection_exhaustion",
+    "healthy": false
+   },
+   "dev-db_connection_exhaustion-1": {
+    "success": false,
+    "diagnosis": "worker_hung",
+    "healthy": false
+   },
+   "dev-queue_backlog-0": {
+    "success": false,
+    "diagnosis": "worker_crashed",
+    "healthy": false
+   },
+   "dev-queue_backlog-1": {
+    "success": false,
+    "diagnosis": "worker_crashed",
+    "healthy": false
+   },
+   "dev-slow_dependency-0": {
+    "success": false,
+    "diagnosis": "bad_deploy",
+    "healthy": false
+   },
+   "dev-slow_dependency-1": {
+    "success": true,
+    "diagnosis": "slow_dependency",
+    "healthy": false
+   },
+   "dev-disk_fill-0": {
+    "success": false,
+    "diagnosis": "false_alarm_client_errors",
+    "healthy": true
+   },
+   "dev-disk_fill-1": {
+    "success": false,
+    "diagnosis": "false_alarm_client_errors",
+    "healthy": true
+   },
+   "dev-bad_deploy-0": {
+    "success": true,
+    "diagnosis": "bad_deploy",
+    "healthy": true
+   },
+   "dev-bad_deploy-1": {
+    "success": false,
+    "diagnosis": "unknown",
+    "healthy": false
+   },
+   "dev-expired_credential-0": {
+    "success": true,
+    "diagnosis": "expired_credential",
+    "healthy": true
+   },
+   "dev-expired_credential-1": {
+    "success": true,
+    "diagnosis": "expired_credential",
+    "healthy": true
+   },
+   "dev-false_alarm_client_errors-0": {
+    "success": true,
+    "diagnosis": "false_alarm_client_errors",
+    "healthy": true
+   },
+   "dev-false_alarm_client_errors-1": {
+    "success": true,
+    "diagnosis": "false_alarm_client_errors",
+    "healthy": true
+   }
+  },
+  "simple agent (llm-act)/heldout": {
+   "heldout-worker_crashed-0": {
+    "success": true,
+    "diagnosis": "worker_crashed",
+    "healthy": true
+   },
+   "heldout-worker_hung-0": {
+    "success": false,
+    "diagnosis": "worker_hung",
+    "healthy": false
+   },
+   "heldout-bad_config-0": {
+    "success": true,
+    "diagnosis": "bad_config",
+    "healthy": true
+   },
+   "heldout-db_connection_exhaustion-0": {
+    "success": false,
+    "diagnosis": "unknown",
+    "healthy": false
+   },
+   "heldout-queue_backlog-0": {
+    "success": false,
+    "diagnosis": "worker_crashed",
+    "healthy": false
+   },
+   "heldout-slow_dependency-0": {
+    "success": true,
+    "diagnosis": "worker_crashed",
+    "healthy": false
+   },
+   "heldout-disk_fill-0": {
+    "success": false,
+    "diagnosis": "unknown",
+    "healthy": true
+   },
+   "heldout-bad_deploy-0": {
+    "success": true,
+    "diagnosis": "bad_deploy",
+    "healthy": true
+   },
+   "heldout-expired_credential-0": {
+    "success": true,
+    "diagnosis": "expired_credential",
+    "healthy": true
+   },
+   "heldout-false_alarm_client_errors-0": {
+    "success": true,
+    "diagnosis": "unknown",
+    "healthy": true
+   }
+  },
+  "durable agent/dev": {
+   "dev-worker_crashed-0": {
+    "success": false,
+    "diagnosis": "unknown",
+    "healthy": false
+   },
+   "dev-worker_crashed-1": {
+    "success": false,
+    "diagnosis": "worker_hung",
+    "healthy": true
+   },
+   "dev-worker_hung-0": {
+    "success": true,
+    "diagnosis": "worker_hung",
+    "healthy": true
+   },
+   "dev-worker_hung-1": {
+    "success": true,
+    "diagnosis": "worker_hung",
+    "healthy": true
+   },
+   "dev-bad_config-0": {
+    "success": true,
+    "diagnosis": "bad_config",
+    "healthy": true
+   },
+   "dev-bad_config-1": {
+    "success": true,
+    "diagnosis": "bad_config",
+    "healthy": true
+   },
+   "dev-db_connection_exhaustion-0": {
+    "success": false,
+    "diagnosis": "db_connection_exhaustion",
+    "healthy": false
+   },
+   "dev-db_connection_exhaustion-1": {
+    "success": false,
+    "diagnosis": "worker_hung",
+    "healthy": false
+   },
+   "dev-queue_backlog-0": {
+    "success": false,
+    "diagnosis": "worker_crashed",
+    "healthy": false
+   },
+   "dev-queue_backlog-1": {
+    "success": false,
+    "diagnosis": "unknown",
+    "healthy": false
+   },
+   "dev-slow_dependency-0": {
+    "success": false,
+    "diagnosis": "bad_deploy",
+    "healthy": false
+   },
+   "dev-slow_dependency-1": {
+    "success": true,
+    "diagnosis": "slow_dependency",
+    "healthy": false
+   },
+   "dev-disk_fill-0": {
+    "success": false,
+    "diagnosis": "false_alarm_client_errors",
+    "healthy": true
+   },
+   "dev-disk_fill-1": {
+    "success": false,
+    "diagnosis": "false_alarm_client_errors",
+    "healthy": true
+   },
+   "dev-bad_deploy-0": {
+    "success": true,
+    "diagnosis": "bad_deploy",
+    "healthy": true
+   },
+   "dev-bad_deploy-1": {
+    "success": true,
+    "diagnosis": "bad_deploy",
+    "healthy": true
+   },
+   "dev-expired_credential-0": {
+    "success": false,
+    "diagnosis": "unknown",
+    "healthy": false
+   },
+   "dev-expired_credential-1": {
+    "success": true,
+    "diagnosis": "expired_credential",
+    "healthy": true
+   },
+   "dev-false_alarm_client_errors-0": {
+    "success": true,
+    "diagnosis": "false_alarm_client_errors",
+    "healthy": true
+   },
+   "dev-false_alarm_client_errors-1": {
+    "success": true,
+    "diagnosis": "false_alarm_client_errors",
+    "healthy": true
+   }
+  },
+  "durable agent/heldout": {
+   "heldout-worker_crashed-0": {
+    "success": false,
+    "diagnosis": "worker_hung",
+    "healthy": true
+   },
+   "heldout-worker_hung-0": {
+    "success": false,
+    "diagnosis": "worker_hung",
+    "healthy": false
+   },
+   "heldout-bad_config-0": {
+    "success": true,
+    "diagnosis": "bad_config",
+    "healthy": true
+   },
+   "heldout-db_connection_exhaustion-0": {
+    "success": false,
+    "diagnosis": "db_connection_exhaustion",
+    "healthy": false
+   },
+   "heldout-queue_backlog-0": {
+    "success": false,
+    "diagnosis": "worker_crashed",
+    "healthy": true
+   },
+   "heldout-slow_dependency-0": {
+    "success": false,
+    "diagnosis": "slow_dependency",
+    "healthy": false
+   },
+   "heldout-disk_fill-0": {
+    "success": false,
+    "diagnosis": "false_alarm_client_errors",
+    "healthy": true
+   },
+   "heldout-bad_deploy-0": {
+    "success": true,
+    "diagnosis": "bad_deploy",
+    "healthy": true
+   },
+   "heldout-expired_credential-0": {
+    "success": true,
+    "diagnosis": "expired_credential",
+    "healthy": true
+   },
+   "heldout-false_alarm_client_errors-0": {
+    "success": true,
+    "diagnosis": "false_alarm_client_errors",
+    "healthy": true
+   }
+  }
+ },
+ "manifest": {
+  "note": "M5 comparison. Later files override earlier ones for the same case_id (baseline: original runs, then backlog cases rerun with the sustained injection). All LLM runs: prompt v2, schema-enforced final answer (v2s), Qwen2.5-7B Q4_K_M via llama.cpp, temperature 0.",
+  "responders": {
+   "scripted runbook": {
+    "dev": [
+     "results/raw/20261006T094258Z-baseline-dev.jsonl",
+     "results/raw/20261007T103208Z-baseline-dev-sustained.jsonl"
+    ],
+    "heldout": [
+     "results/raw/20261006T101202Z-baseline-heldout.jsonl",
+     "results/raw/20261007T103434Z-baseline-heldout-sustained.jsonl"
+    ]
+   },
+   "simple agent (llm-act)": {
+    "dev": [
+     "results/raw/20261008T093250Z-llm-act-dev-v2s.jsonl"
+    ],
+    "heldout": [
+     "results/raw/20261008T095103Z-llm-act-heldout-v2s.jsonl"
+    ]
+   },
+   "durable agent": {
+    "dev": [
+     "results/raw/20261008T100015Z-durable-dev-v2s.jsonl"
+    ],
+    "heldout": [
+     "results/raw/20261008T101820Z-durable-heldout-v2s.jsonl"
+    ]
+   }
+  }
+ }
+}

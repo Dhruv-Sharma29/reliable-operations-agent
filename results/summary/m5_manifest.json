@@ -1,0 +1,9 @@
+{"note": "M5 comparison. Later files override earlier ones for the same case_id (baseline: original runs, then backlog cases rerun with the sustained injection). All LLM runs: prompt v2, schema-enforced final answer (v2s), Qwen2.5-7B Q4_K_M via llama.cpp, temperature 0.",
+ "responders": {
+  "scripted runbook": {"dev": ["results/raw/20261006T094258Z-baseline-dev.jsonl", "results/raw/20261007T103208Z-baseline-dev-sustained.jsonl"],
+                       "heldout": ["results/raw/20261006T101202Z-baseline-heldout.jsonl", "results/raw/20261007T103434Z-baseline-heldout-sustained.jsonl"]},
+  "simple agent (llm-act)": {"dev": ["results/raw/20261008T093250Z-llm-act-dev-v2s.jsonl"],
+                             "heldout": ["results/raw/20261008T095103Z-llm-act-heldout-v2s.jsonl"]},
+  "durable agent": {"dev": ["results/raw/20261008T100015Z-durable-dev-v2s.jsonl"],
+                    "heldout": ["results/raw/20261008T101820Z-durable-heldout-v2s.jsonl"]}
+ }}

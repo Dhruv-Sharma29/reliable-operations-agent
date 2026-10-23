@@ -1,0 +1,21 @@
+dev-worker_crashed-0                       alerts=WorkerHeartbeatStale                     diag=worker_hung                healthy_after=False success=False
+dev-worker_crashed-1                       alerts=WorkerHeartbeatStale                     diag=worker_hung                healthy_after=False success=False
+dev-worker_hung-0                          alerts=WorkerHeartbeatStale                     diag=worker_hung                healthy_after=False success=False
+dev-worker_hung-1                          alerts=WorkerHeartbeatStale                     diag=worker_hung                healthy_after=False success=False
+dev-bad_config-0                           alerts=ApiErrorRateHigh,Api5xxRateHigh          diag=bad_deploy                 healthy_after=False success=False
+dev-bad_config-1                           alerts=ApiErrorRateHigh,Api5xxRateHigh          diag=bad_config                 healthy_after=False success=False
+dev-db_connection_exhaustion-0             alerts=ApiErrorRateHigh,Api5xxRateHigh,WorkerHeartbeatStale diag=db_connection_exhaustion   healthy_after=False success=False
+dev-db_connection_exhaustion-1             alerts=ApiErrorRateHigh,Api5xxRateHigh,WorkerHeartbeatStale diag=worker_hung                healthy_after=False success=False
+dev-queue_backlog-0                        alerts=JobBacklogHigh                           diag=worker_crashed             healthy_after=False success=False
+dev-queue_backlog-1                        alerts=JobBacklogHigh                           diag=worker_crashed             healthy_after=False success=False
+dev-slow_dependency-0                      alerts=JobLatencyHigh                           diag=slow_dependency            healthy_after=False success=False
+dev-slow_dependency-1                      alerts=JobLatencyHigh                           diag=slow_dependency            healthy_after=False success=False
+dev-disk_fill-0                            alerts=ApiErrorRateHigh,Api5xxRateHigh          diag=false_alarm_client_errors  healthy_after=False success=False
+dev-disk_fill-1                            alerts=ApiErrorRateHigh,Api5xxRateHigh          diag=false_alarm_client_errors  healthy_after=False success=False
+dev-bad_deploy-0                           alerts=Api5xxRateHigh                           diag=bad_deploy                 healthy_after=False success=False
+dev-bad_deploy-1                           alerts=Api5xxRateHigh                           diag=bad_deploy                 healthy_after=False success=False
+dev-expired_credential-0                   alerts=JobFailuresHigh                          diag=expired_credential         healthy_after=False success=False
+dev-expired_credential-1                   alerts=JobFailuresHigh                          diag=expired_credential         healthy_after=False success=False
+dev-false_alarm_client_errors-0            alerts=ApiErrorRateHigh                         diag=false_alarm_client_errors  healthy_after=True success=True
+dev-false_alarm_client_errors-1            alerts=ApiErrorRateHigh                         diag=false_alarm_client_errors  healthy_after=True success=True
+/workspace/ItsDS/build/02-reliable-operations-agent/results/raw/20261007T110113Z-llm-readonly-dev-v2.jsonl

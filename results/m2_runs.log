@@ -1,0 +1,47 @@
+dev-worker_crashed-0                       alerts=WorkerHeartbeatStale                     diag=worker_hung                healthy_after=False success=False
+dev-worker_crashed-1                       alerts=WorkerHeartbeatStale                     diag=worker_crashed             healthy_after=False success=False
+dev-worker_hung-0                          alerts=WorkerHeartbeatStale                     diag=worker_hung                healthy_after=False success=False
+dev-worker_hung-1                          alerts=WorkerHeartbeatStale                     diag=worker_hung                healthy_after=False success=False
+dev-bad_config-0                           alerts=ApiErrorRateHigh,Api5xxRateHigh          diag=db_connection_exhaustion   healthy_after=False success=False
+dev-bad_config-1                           alerts=ApiErrorRateHigh,Api5xxRateHigh          diag=slow_dependency            healthy_after=False success=False
+dev-db_connection_exhaustion-0             alerts=ApiErrorRateHigh,Api5xxRateHigh,WorkerHeartbeatStale diag=worker_crashed             healthy_after=False success=False
+dev-db_connection_exhaustion-1             alerts=ApiErrorRateHigh,Api5xxRateHigh,WorkerHeartbeatStale diag=db_connection_exhaustion   healthy_after=False success=False
+dev-queue_backlog-0                        alerts=JobBacklogHigh                           diag=unknown                    healthy_after=True success=False
+dev-queue_backlog-1                        alerts=JobBacklogHigh                           diag=worker_hung                healthy_after=True success=False
+dev-slow_dependency-0                      alerts=JobLatencyHigh                           diag=slow_dependency            healthy_after=False success=False
+dev-slow_dependency-1                      alerts=JobLatencyHigh                           diag=queue_backlog              healthy_after=False success=False
+dev-disk_fill-0                            alerts=ApiErrorRateHigh,Api5xxRateHigh          diag=disk_fill                  healthy_after=False success=False
+dev-disk_fill-1                            alerts=ApiErrorRateHigh,Api5xxRateHigh          diag=disk_fill                  healthy_after=False success=False
+dev-bad_deploy-0                           alerts=Api5xxRateHigh                           diag=unknown                    healthy_after=False success=False
+dev-bad_deploy-1                           alerts=Api5xxRateHigh                           diag=bad_config                 healthy_after=False success=False
+dev-expired_credential-0                   alerts=JobFailuresHigh                          diag=bad_config                 healthy_after=False success=False
+dev-expired_credential-1                   alerts=JobFailuresHigh                          diag=bad_deploy                 healthy_after=False success=False
+dev-false_alarm_client_errors-0            alerts=ApiErrorRateHigh                         diag=bad_config                 healthy_after=True success=True
+dev-false_alarm_client_errors-1            alerts=ApiErrorRateHigh                         diag=bad_deploy                 healthy_after=True success=True
+/workspace/ItsDS/build/02-reliable-operations-agent/results/raw/20261007T042004Z-llm-readonly-dev.jsonl
+heldout-worker_crashed-0                   alerts=WorkerHeartbeatStale                     diag=worker_crashed             healthy_after=False success=False
+heldout-worker_hung-0                      alerts=WorkerHeartbeatStale                     diag=worker_hung                healthy_after=False success=False
+heldout-bad_config-0                       alerts=ApiErrorRateHigh,Api5xxRateHigh          diag=db_connection_exhaustion   healthy_after=False success=False
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/workspace/ItsDS/build/02-reliable-operations-agent/eval/run.py", line 118, in <module>
+    main()
+  File "/workspace/ItsDS/build/02-reliable-operations-agent/eval/run.py", line 106, in main
+    rec = run_case(rt, incident, params, case_id, RESPONDERS[args.responder])
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/ItsDS/build/02-reliable-operations-agent/eval/run.py", line 79, in run_case
+    response = responder(record["alerts"]).to_dict()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/ItsDS/build/02-reliable-operations-agent/eval/run.py", line 27, in _llm_readonly
+    return investigate(alerts) if alerts else Investigation(diagnosis="no_alert", stop_reason="no_alert")
+           ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/ItsDS/build/02-reliable-operations-agent/agent/llm_agent.py", line 95, in investigate
+    resp = _call_model(client, messages, submit_only if finalising else tools,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/ItsDS/build/02-reliable-operations-agent/agent/llm_agent.py", line 71, in _call_model
+    r.raise_for_status()
+  File "/workspace/ItsDS/build/02-reliable-operations-agent/.venv/lib/python3.12/site-packages/httpx/_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Server error '502 Bad Gateway' for url 'http://127.0.0.1:21091/v1/chat/completions'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/502
