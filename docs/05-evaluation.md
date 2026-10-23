@@ -123,6 +123,11 @@ Prompt v2s, same 30 cases per responder.
 
 Totals: scripted **30/30**, simple **15/30**, durable **14/30**.
 
+**Same-day rerun (2026-10-23).** Project 04's transfer check ran the simple agent again on all 30
+cases with the same base model: **16/30** (raw: `results/raw/20261023T14*-llm-act-*-transfer-base-7b.jsonl`),
+in line with 15/30. The same run with project 04's fine-tuned 7B scored 12/30 (paired with base:
+9 vs 5 cases, p = 0.42); the analysis is in project 04 (`results/summary/m5-transfer.md`).
+
 **Reproducible offline.** `python -m eval.compare results/summary/m5_manifest.json --out <dir>/m5`
 regenerates this table byte-for-byte from the six raw files the manifest names (checked
 2026-10-23; [start.md](../start.md) § 3).
