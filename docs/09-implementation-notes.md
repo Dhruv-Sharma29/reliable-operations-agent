@@ -27,8 +27,8 @@ PLAN.md § M2 called for checking Strands / Microsoft Agent Framework against th
 choice was made on reasoning, not a hands-on trial ([01](01-architecture.md) § Decision record).
 
 ### 5. llama.cpp, not vLLM, for every published number
-PLAN.md calls llama.cpp a stopgap; the README's tool-layer section describes the schemas as "the
-OpenAI function-calling format that vLLM serves". All runs used Qwen2.5-7B-Instruct Q4_K_M on
+PLAN.md calls llama.cpp a stopgap; the README's tool-layer section used to describe the schemas as
+"the OpenAI function-calling format that vLLM serves" (corrected 2026-10-23). All runs used Qwen2.5-7B-Instruct Q4_K_M on
 llama.cpp behind the project 01 gateway (`results/summary/m5-comparison.md`). Two llama.cpp
 behaviours shaped the loop: entries 12 and 13.
 

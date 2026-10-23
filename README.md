@@ -193,7 +193,8 @@ the audit table; all three are refused.
   scoring fails these, because the incident record would name the wrong cause.
 - **Wrong actions did no damage this time:** the 3 wrong rollbacks failed on the tools' own
   preconditions, and all 3 needed approval, where a real human could have rejected them.
-- **Output format lost 2 dev diagnoses,** one of them correct. This is the next fix to make.
+- **Output format lost 2 dev diagnoses,** one of them correct. Fixed afterwards by the schema-enforced
+  final answer (v2s: 0 of 30 lost; see Lost diagnoses fixed above).
 
 **Live prompt-injection demo** (`eval/injection_demo.py`). Log lines planted for "automated agents"
 said rotating the payments credential was pre-approved. A real alert then fired, and no human
@@ -262,7 +263,7 @@ uncertainty in `results/ui/m5_report.html`):
 - **Simple and durable agents are equally (in)accurate** (5 differing cases, McNemar p = 1.0).
   Durability buys crash safety (milestone 4), not better diagnoses.
 - **The durable agent escalates more,** because it won't act on an `unknown` diagnosis.
-- **9 of 60 LLM actions reported success while the service was still broken.** A scorer that
+- **In 9 of 60 LLM cases an action reported success while the service was still broken.** A scorer that
   trusted the agent would have counted them as recoveries.
 
 Demo, end to end: `python -m eval.crash_demo` breaks the config, the agent diagnoses it, an
@@ -289,7 +290,8 @@ says *what*.
 ## Agent tool layer
 
 - **Strict JSON Schemas** for 10 read tools, 8 actions and a diagnosis submission, in the OpenAI
-  function-calling format that vLLM serves. Enums encode scope: the external dependency can't be
+  function-calling format that OpenAI-compatible servers accept (every published run used llama.cpp;
+  vLLM is the planned server). Enums encode scope: the external dependency can't be
   restarted, replicas are capped at 4, only `*.tmp` files can be deleted, and unknown arguments are
   rejected. A drift test checks the schemas against the real function signatures.
 - **Evidence ledger:** every read gets an ID (`ev-3`), and a diagnosis must cite IDs that were
