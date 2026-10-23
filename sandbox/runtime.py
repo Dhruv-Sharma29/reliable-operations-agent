@@ -183,8 +183,11 @@ class Runtime:
                              autocommit=True) as conn:
             if not conn.execute("SELECT 1 FROM pg_roles WHERE rolname='agent'").fetchone():
                 conn.execute("CREATE ROLE agent LOGIN")
+            # Owns the agent store; can't log in, so the agent process can't act as it (agent/store.py).
+            if not conn.execute("SELECT 1 FROM pg_roles WHERE rolname='audit_owner'").fetchone():
+                conn.execute("CREATE ROLE audit_owner NOLOGIN")
             if not conn.execute("SELECT 1 FROM pg_database WHERE datname='agentstate'").fetchone():
-                conn.execute("CREATE DATABASE agentstate OWNER agent")
+                conn.execute("CREATE DATABASE agentstate OWNER audit_owner")
 
     def agent_db_stop(self) -> None:
         self._cluster_stop(paths.AGENT_PG_DIR, paths.AGENT_PG_PORT)

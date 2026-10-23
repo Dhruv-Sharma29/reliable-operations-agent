@@ -62,10 +62,15 @@ CREATE TRIGGER incident_events_no_change BEFORE UPDATE OR DELETE ON incident_eve
 _after_transition: Callable[[str, str], None] | None = None
 
 
+_applied_for = -1   # store.generation the workflow schema was last applied for
+
+
 def ensure() -> None:
+    global _applied_for
     store.ensure()
-    with store.connect() as conn:
-        conn.execute(SCHEMA)
+    if _applied_for != store.generation:
+        store.apply_schema(SCHEMA, {"incidents": "SELECT, INSERT, UPDATE", "incident_events": "SELECT, INSERT"})
+        _applied_for = store.generation
 
 
 def action_id_for(incident_id: str, step: str = "remediation") -> str:
@@ -204,12 +209,20 @@ def _count(model_calls: list | None, n: int) -> None:
 
 
 def resume_all(executor: Executor, **kw) -> list[dict]:
-    """After a crash: continue every incident that isn't finished."""
+    """After a crash: continue every incident that isn't finished (agent/supervisor.py calls this at
+    start-up). One incident failing, e.g. because the model endpoint is down, doesn't stop the
+    others: its error is returned in its place and the incident stays where it was."""
     ensure()
     with store.connect() as conn:
         ids = [r[0] for r in conn.execute("SELECT incident_id FROM incidents WHERE state NOT IN ('RESOLVED', 'ESCALATED') "
                                           "ORDER BY opened_at")]
-    return [run(i, executor, **kw) for i in ids]
+    results = []
+    for i in ids:
+        try:
+            results.append(run(i, executor, **kw))
+        except Exception as e:  # noqa: BLE001 - reported per incident; the supervisor keeps going
+            results.append({"incident_id": i, "error": f"{type(e).__name__}: {e}"[:300]})
+    return results
 
 
 def as_investigation(inc: dict, actions: list[dict]) -> ActingInvestigation:

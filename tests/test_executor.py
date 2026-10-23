@@ -98,11 +98,21 @@ def test_failed_action_is_recorded_as_failed(executor):
     assert events(out.action_id)[-1] == "failed"
 
 
-@pytest.mark.parametrize("sql", ["UPDATE audit_events SET event = 'x'", "DELETE FROM audit_events", "TRUNCATE audit_events"])
+@pytest.mark.parametrize("sql", ["UPDATE audit_events SET event = 'x'", "DELETE FROM audit_events", "TRUNCATE audit_events",
+                                 "DROP TRIGGER audit_no_change ON audit_events",
+                                 "ALTER TABLE audit_events DISABLE TRIGGER audit_no_change", "DROP TABLE audit_events"])
 def test_audit_log_is_append_only(executor, sql):
+    """The agent role can't change the log, and can't remove what stops it: it doesn't own the tables."""
     executor.request(incident(), "escalate", {"reason": "test"})
-    with store.connect() as conn, pytest.raises(psycopg.errors.RaiseException):
+    with store.connect() as conn, pytest.raises(psycopg.errors.InsufficientPrivilege):
         conn.execute(sql)
+
+
+def test_append_only_trigger_still_guards_the_owner_side():
+    """Defence in depth: even a role allowed to UPDATE is stopped by the trigger."""
+    with psycopg.connect(paths.dsn("postgres", "test", port=paths.AGENT_PG_PORT), dbname=store.DB, autocommit=True) as conn, \
+            pytest.raises(psycopg.errors.RaiseException):
+        conn.execute("UPDATE audit_events SET event = 'x'")
 
 
 # --- acting agent: investigate, then one remediation through the executor (fake model) ---------

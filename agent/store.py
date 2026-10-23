@@ -7,7 +7,12 @@ remediate had taken out its control plane.
 
 Fail closed: any failure to reach the store raises AuditUnavailable. The executor writes the
 audit record before every effect, so no action runs without a record.
-M4 builds workflow state and idempotency on the same tables."""
+M4 builds workflow state and idempotency on the same tables.
+
+Ownership: the database and every table belong to `audit_owner`, a role that can't log in, and the
+schema is applied by the cluster's superuser (apply_schema). The `agent` role gets only the rows it
+needs to write: it can append audit events but not change, delete or truncate them, and it can't
+drop or disable the append-only triggers, because only a table's owner can."""
 
 from __future__ import annotations
 
@@ -18,6 +23,9 @@ import psycopg
 from sandbox import paths
 
 DB = "agentstate"
+OWNER = "audit_owner"
+# What the agent may do per table; everything else (DDL, TRUNCATE, UPDATE/DELETE on logs) is denied.
+AGENT_GRANTS = {"actions": "SELECT, INSERT, UPDATE", "audit_events": "SELECT, INSERT"}
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS actions (
     action_id    text PRIMARY KEY,
@@ -63,11 +71,12 @@ class AuditUnavailable(RuntimeError):
 
 
 _ready = False
+generation = 0   # bumped each time ensure() (re)initialises the store; lets dependants re-apply their schema
 
 
 def ensure() -> None:
     """Start the agent's database if needed and apply the schema (once per process)."""
-    global _ready
+    global _ready, generation
     if _ready:
         return
     from sandbox.runtime import Runtime
@@ -75,11 +84,26 @@ def ensure() -> None:
         rt = Runtime()
         if not rt.agent_db_running():
             rt.agent_db_start()
-        with _connect() as conn:
-            conn.execute(SCHEMA)
+        apply_schema(SCHEMA, AGENT_GRANTS)
     except (psycopg.Error, OSError, subprocess.CalledProcessError) as e:
         raise AuditUnavailable(f"agent store unavailable: {type(e).__name__}: {str(e)[:200]}") from e
     _ready = True
+    generation += 1
+
+
+def apply_schema(sql: str, grants: dict[str, str]) -> None:
+    """Run DDL as the cluster superuser, give the tables to OWNER, and grant the agent exactly
+    `grants` (table -> privileges) plus the sequences its INSERTs need. Idempotent, and it also
+    migrates a store created before 2026-10-23, when the agent role owned everything."""
+    with psycopg.connect(paths.dsn("postgres", "agent-setup", port=paths.AGENT_PG_PORT), dbname=DB,
+                         autocommit=True) as conn, conn.transaction():
+        conn.execute(f"ALTER DATABASE {DB} OWNER TO {OWNER}")
+        conn.execute(sql)
+        for table, privileges in grants.items():
+            conn.execute(f"ALTER TABLE {table} OWNER TO {OWNER}")
+            conn.execute(f"REVOKE ALL ON {table} FROM agent, PUBLIC")
+            conn.execute(f"GRANT {privileges} ON {table} TO agent")
+        conn.execute("GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO agent")
 
 
 def _connect() -> psycopg.Connection:
