@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "comment": "Authorization for agent actions. Decided from this file and the validated tool + arguments only; never from model text, justifications, or log contents. Keys are 'tool' or 'tool:target'.",
+  "default": "forbid",
+  "rules": {
+    "escalate": {"decision": "allow", "why": "no system effect"},
+    "restart_service:worker": {"decision": "allow", "why": "low blast radius, reversible, a standard first fix"},
+    "restart_service:report-exporter": {"decision": "allow", "why": "batch job, no user traffic"},
+    "stop_service:report-exporter": {"decision": "allow", "why": "batch job, restartable"},
+    "cleanup_spool": {"decision": "allow", "why": "only *.tmp files, enforced by schema and action"},
+    "scale_service:worker": {"decision": "allow", "max_replicas": 3, "above_max": "approval",
+                             "why": "more workers is reversible; beyond 3 costs capacity elsewhere"},
+    "restart_service:api": {"decision": "approval", "why": "user-facing downtime"},
+    "rollback_config": {"decision": "approval", "why": "changes production configuration"},
+    "rollback_release": {"decision": "approval", "why": "changes the deployed version"},
+    "rotate_credential:payments": {"decision": "approval", "why": "touches a secret and an external provider"}
+  }
+}
