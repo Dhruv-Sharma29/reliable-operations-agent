@@ -6,12 +6,15 @@ catalogue, so held-out variants test robustness to parameter changes, not to uns
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 
 from agent.tools import act, read
 
 RECENT_S = 120
 SLOW_DEPENDENCY_MS = 1000
+# How an action runs: directly by default; eval.run's `baseline-exec` sends it through the executor.
+run_action: Callable[..., dict] = lambda action, **args: act.ACTIONS[action](**args)
 
 
 @dataclass
@@ -22,7 +25,7 @@ class Response:
     escalated: bool = False
 
     def do(self, action: str, **args) -> None:
-        result = act.ACTIONS[action](**args)
+        result = run_action(action, **args)
         self.actions.append({"action": action, "args": args, "result": result})
         if action == "escalate":
             self.escalated = True

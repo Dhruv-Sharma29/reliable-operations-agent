@@ -3,6 +3,7 @@
     python -m eval.run --responder baseline --split dev
     python -m eval.run --responder noop --split dev          # control: nobody responds
     python -m eval.run --responder baseline --only worker_hung
+    python -m eval.run --responder baseline-exec --split dev   # same decisions, through the executor
 
 Per case: reset to known-good -> verify healthy -> inject -> wait settle -> evaluate alerts ->
 responder -> independent verification -> score. Results go to results/raw/.
@@ -14,6 +15,7 @@ import argparse
 import json
 import time
 from datetime import UTC, datetime
+from pathlib import Path
 
 from eval.verify import verify
 from incidents.catalog import cases, inject
@@ -59,6 +61,30 @@ def _durable(alerts):
     return inv
 
 
+def _baseline_exec(alerts):
+    """The scripted runbook's decisions, with every action sent through the policy-enforcing
+    executor and its audit store like the LLM agents' (same stand-in approver). Needs no model, so
+    it checks the agent's whole control path deterministically, e.g. as its own OS user
+    (sandbox/deploy.py). Each action's result records the executor's final state."""
+    import uuid
+
+    from agent.executor import Executor
+    from runbooks import baseline
+    ex, incident = Executor("ops-agent"), f"baseline-exec-{uuid.uuid4().hex[:8]}"
+
+    def through_executor(action: str, **args) -> dict:
+        out = ex.request(incident, action, args)
+        if out.state == "pending_approval":
+            out = ex.approve(out.action_id, "eval-approver")
+        return {"executor_state": out.state, "action_id": out.action_id, "detail": out.detail}
+
+    direct, baseline.run_action = baseline.run_action, through_executor
+    try:
+        return baseline.respond(alerts)
+    finally:
+        baseline.run_action = direct
+
+
 def _noop_wait(alerts):
     """Control for responder latency: does nothing, but only after NOOP_WAIT_S (default 90 s, about
     the LLM agent's median). An incident healthy here but not under `noop` heals by itself."""
@@ -68,7 +94,7 @@ def _noop_wait(alerts):
 
 
 RESPONDERS = {**SCRIPTED, "llm-readonly": _llm_readonly, "llm-act": _llm_act, "noop-wait": _noop_wait,
-              "durable": _durable}
+              "durable": _durable, "baseline-exec": _baseline_exec}
 from sandbox import paths
 from sandbox.runtime import Runtime
 
@@ -122,11 +148,13 @@ def main() -> None:
     p.add_argument("--split", choices=["dev", "heldout"], default="dev")
     p.add_argument("--only", help="run only this incident name")
     p.add_argument("--label", default="")
+    p.add_argument("--out-dir", default=str(paths.ROOT / "results/raw"),
+                   help="where the run's .jsonl goes (default results/raw; an agent OS user may not write there)")
     args = p.parse_args()
 
     selected = [c for c in cases(args.split) if not args.only or c[0].name == args.only]
     run_id = f"{datetime.now(UTC):%Y%m%dT%H%M%SZ}-{args.responder}-{args.split}{('-' + args.label) if args.label else ''}"
-    out = paths.ROOT / "results/raw" / f"{run_id}.jsonl"
+    out = Path(args.out_dir) / f"{run_id}.jsonl"
     out.parent.mkdir(parents=True, exist_ok=True)
     rt = Runtime()
     with open(out, "w") as f:
