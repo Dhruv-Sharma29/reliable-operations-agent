@@ -119,11 +119,12 @@ class Runtime:
 
     def _pg_env_prefix(self) -> list[str]:
         """Postgres refuses to run as root. When root, run it as `nobody`, adding the group of any
-        ancestor directory that is not world-traversable (no permission changes on disk)."""
+        ancestor directory, of its data or its binaries, that is not world-traversable (no
+        permission changes on disk)."""
         if os.geteuid() != 0:
             return []
         groups = set()
-        for parent in [paths.PG_DIR, *paths.PG_DIR.parents]:
+        for parent in [paths.PG_DIR, *paths.PG_DIR.parents, paths.PG_BIN, *paths.PG_BIN.parents]:
             if parent.exists() and not parent.stat().st_mode & stat.S_IXOTH:
                 groups.add(parent.stat().st_gid)
         group_arg = ",".join(str(g) for g in sorted(groups)) or "65534"
