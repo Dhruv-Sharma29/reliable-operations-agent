@@ -7,6 +7,7 @@ import pytest
 from agent.tools import act
 from eval.run import action_key, score
 from incidents.catalog import INCIDENTS, cases
+from sandbox import paths
 
 
 def response(diagnosis, *actions, escalated=False):
@@ -45,6 +46,15 @@ def test_escalate_case_requires_escalation_and_no_changes():
     assert score(inc, response("slow_dependency", ("escalate", {"reason": "x"}), escalated=True), BROKEN)["success"]
     scaled = response("slow_dependency", ("scale_service", {"service": "worker", "replicas": 3}))
     assert not score(inc, scaled, HEALTHY)["success"]
+
+
+def test_bad_config_ports_are_not_used_by_the_sandbox():
+    """Regression: dev-bad_config-0 pointed the API at PG_PORT + 1, the agent store's port, so with
+    the store up the API reached a live server instead of a closed port."""
+    used = {paths.PG_PORT, paths.AGENT_PG_PORT, paths.API_PORT, paths.PAYMENTS_PORT,
+            *range(paths.WORKER_PORT_BASE + 1, paths.WORKER_PORT_BASE + 10)}
+    bad = [p["bad_port"] for split in ("dev", "heldout") for p in INCIDENTS["bad_config"].variants[split]]
+    assert bad and not used & set(bad)
 
 
 def test_action_key():

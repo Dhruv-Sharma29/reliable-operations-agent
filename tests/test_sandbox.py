@@ -69,8 +69,8 @@ def test_investigation_tools_still_work_when_app_connections_are_exhausted(clean
 
 
 def test_config_rollback_restores_previous_version(clean):
-    INCIDENTS["bad_config"].inject(clean, {"bad_port": paths.PG_PORT + 1, "author": "t", "note": "t"})
-    assert read.config_history(last=1)[-1]["changed"] == {"api.db_port": {"from": paths.PG_PORT, "to": paths.PG_PORT + 1}}
+    INCIDENTS["bad_config"].inject(clean, {"bad_port": paths.PG_PORT + 2, "author": "t", "note": "t"})
+    assert read.config_history(last=1)[-1]["changed"] == {"api.db_port": {"from": paths.PG_PORT, "to": paths.PG_PORT + 2}}
     assert act.rollback_config()["ok"]
     assert state.current_config()["api"]["db_port"] == paths.PG_PORT
     assert verify(timeout_s=15)["healthy"]

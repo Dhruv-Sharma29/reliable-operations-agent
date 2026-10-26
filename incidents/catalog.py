@@ -106,7 +106,10 @@ INCIDENTS = {i.name: i for i in [
               "heldout": [{"workers": 2, "victim": 2}]}),
     Incident("bad_config", "A config change points the API at the wrong database port.", "fix",
              frozenset({"rollback_config"}), _bad_config,
-             {"dev": [{"workers": 1, "bad_port": paths.PG_PORT + 1, "author": "jdoe", "note": "db failover prep"},
+             # bad_port must be a port nothing listens on, so the API sees "connection refused". It was
+             # PG_PORT + 1 until 2026-10-26, which became the agent store's port when the store moved
+             # to its own instance (test_bad_config_ports_are_not_used_by_the_sandbox).
+             {"dev": [{"workers": 1, "bad_port": paths.PG_PORT + 2, "author": "jdoe", "note": "db failover prep"},
                       {"workers": 1, "bad_port": 5432, "author": "deploy-bot", "note": "sync settings from staging"}],
               "heldout": [{"workers": 2, "bad_port": paths.PG_PORT + 10, "author": "asmith", "note": "tune connection settings"}]},
              settle_s=6),
