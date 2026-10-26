@@ -32,11 +32,12 @@ system-wide, and `rm -rf .tools` undoes it. Idempotent. When run as root, Postgr
 uv run pytest
 ```
 
-**111 tests.** With PostgreSQL unpacked, the 49 integration tests run: `test_sandbox.py` (8) starts
+**114 tests.** With PostgreSQL unpacked, the 51 integration tests run: `test_sandbox.py` (8) starts
 the sandbox and injects real faults; `test_executor.py` (25) exercises the audit store, including
 with the sandbox database stopped; `test_durability.py` (9) kills processes with `os._exit` between
 an effect and its record; `test_store_auth.py` (7) checks the store's password auth, and, when run as
-root, runs the executor as a separate uid. Tests use port base 17000 and `.run-test/` (`tests/conftest.py`), so they
+root, runs the executor as a separate uid; `test_deploy.py` (2, root and a non-root account needed)
+hands a sandbox to that account and fixes an incident as it (port base 16500, `.run-test-deploy/`). Tests use port base 17000 and `.run-test/` (`tests/conftest.py`), so they
 don't touch a development sandbox or an evaluation in progress.
 
 ### The audit store's credentials
@@ -49,6 +50,8 @@ set it up, `agent.pw` for `$AGENT_OS_UID` (default: the same user). To run the a
 AGENT_OS_UID=<agent uid> uv run python -m agent.store init   # as the setup user: start, schema, hand over agent.pw
 # then start the agent as that uid; it logs in as `agent` and can't read postgres.pw
 ```
+
+To run the sandbox *and* the agent as that user, which is what a deployment would do, see § 3a.
 
 A store created before 2026-10-26 (trust auth) is migrated on its next start, data kept. Rotation
 isn't automated: deleting `.run/agent-secrets/` on its own locks setup out of the existing store, so
@@ -69,6 +72,26 @@ PostgreSQL 18432, agent store 18433. Change the base with `SANDBOX_PORT_BASE` an
 kernel's ephemeral range ([docs/09](docs/09-implementation-notes.md) § 15). Logs and state live
 in `.run/`.
 
+## 3a. Running as a separate OS user
+
+```bash
+export SANDBOX_RUN_DIR=$PWD/.run-agent SANDBOX_PORT_BASE=16000        # optional: keep it apart from .run/
+python -m sandbox.deploy prepare --agent-uid 1000                       # as root
+python -m sandbox.deploy exec -- .venv/bin/python -m eval.run --responder baseline-exec --split dev \
+    --out-dir $SANDBOX_RUN_DIR/results                                  # runs as uid 1000
+python -m sandbox.deploy exec -- .venv/bin/python -m sandbox.runtime pg-stop   # stops its sandbox, not the store
+python -c "from sandbox.runtime import Runtime; Runtime().agent_db_stop()"       # as root: the store
+```
+
+`prepare` stops what runs from that run directory, starts the audit store as the setup user, hands
+`agent.pw` and the sandbox's directories (including its PostgreSQL cluster) to the agent's uid, and
+records the uid in `deploy.json`. `exec` drops to that uid and runs the command, as a service
+manager would. The uid must be a real account (initdb looks it up), not root and not `nobody`. The
+agent's user can't write `results/raw/`, hence `--out-dir`; copy the file across afterwards.
+`prepare --agent-uid 0` hands the sandbox back to root. Use `.venv/bin/python` rather than `uv run`
+under `exec`: the agent's user has no uv cache. Result of the full run:
+`results/summary/nonroot-deployment.md`.
+
 ## 4. Controls and the scripted baseline — reproduces M1
 
 ```bash
@@ -77,6 +100,7 @@ uv run python -m eval.run --responder baseline --split dev
 uv run python -m eval.run --responder noop --split heldout
 uv run python -m eval.run --responder baseline --split heldout
 NOOP_WAIT_S=90 uv run python -m eval.run --responder noop-wait --split dev --only queue_backlog
+uv run python -m eval.run --responder baseline-exec --split dev    # baseline's decisions, through the executor
 uv run python -m eval.summarize results/raw/<run>.jsonl --out /tmp/ops-agent-check/m1
 ```
 

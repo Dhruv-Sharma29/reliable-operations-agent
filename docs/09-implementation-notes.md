@@ -158,6 +158,18 @@ by migrating it by hand, and `test_a_running_trust_auth_store_is_migrated_in_pla
 work fixed an older bug: Postgres run as `nobody` got only the groups needed to reach its run
 directory, not its binaries, so a `SANDBOX_RUN_DIR` outside the repo failed to load `libpq`.
 
+Second follow-up, same day: the sandbox and the agent now run as one unprivileged user
+(`sandbox/deploy.py`, [03](03-permissions-and-audit.md) § A separate agent user). Three things
+surfaced on the way. `initdb` refuses a uid with no passwd entry, so the agent needs a real account.
+`pg_isready` ran as the owner of the *sandbox's* cluster even when checking the store's, so a
+running store looked stopped once the two had different owners. Postgres tools now run as the owner
+of the cluster they act on. And `dev-bad_config-0`'s "wrong" database port, `PG_PORT + 1`, had been the
+agent store's port since the store got its own instance. With the store up, the API reached a live
+server instead of a closed port. The scripted baseline never saw it, because it runs without the
+store. Every `llm-act` and `durable` run did, and diagnosed that case correctly 5 times in 6 anyway.
+The port is now `PG_PORT + 2`, guarded by `test_bad_config_ports_are_not_used_by_the_sandbox`; the
+published LLM numbers were not re-run.
+
 ### 26. A supervisor resumes unfinished incidents (added 2026-10-23)
 Crash recovery used to need a manual `workflow.run(...)` per incident; `resume_all()` existed but
 nothing called it, and no test covered it. `python -m agent.supervisor` calls it at start-up, and

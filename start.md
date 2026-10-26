@@ -29,18 +29,18 @@ This installs FastAPI, uvicorn, httpx, psycopg (binary), jsonschema and pytest f
 uv run pytest tests/test_policy.py tests/test_units.py tests/test_tools.py tests/test_llm_agent.py
 ```
 
-Expect **62 passed**. What they cover:
+Expect **63 passed**. What they cover:
 
 | File | Tests | Shows |
 |---|---|---|
 | `test_policy.py` | 15 | the decision table; default forbid; `decide()` takes no text input; policy file matches the action tools |
 | `test_tools.py` | 19 | schemas match function signatures; `action_id` is in no model-facing schema; invalid and injected arguments rejected; the evidence ledger refuses actions |
-| `test_units.py` | 13 | the scorer: false alarm fails on any change, escalate case needs escalation and no change; actions refuse out-of-scope targets |
+| `test_units.py` | 14 | the scorer: false alarm fails on any change, escalate case needs escalation and no change; actions refuse out-of-scope targets; incident ports don't collide with the sandbox's |
 | `test_llm_agent.py` | 15 | the loop against a scripted fake model: citations, budgets, forced finalisation, server errors, truncated replies |
 
-The other 49 tests (`test_sandbox.py`, `test_executor.py`, `test_durability.py`, `test_store_auth.py`) start real
+The other 51 tests (`test_sandbox.py`, `test_executor.py`, `test_durability.py`, `test_store_auth.py`, `test_deploy.py`) start real
 PostgreSQL instances and app processes. They **skip** when PostgreSQL hasn't been unpacked
-(`reason="run scripts/setup_postgres.sh"`). Once it has, plain `uv run pytest` runs all 111 and
+(`reason="run scripts/setup_postgres.sh"`). Once it has, plain `uv run pytest` runs all 114 and
 starts those daemons on ports 17xxx — see [RUNBOOK.md](RUNBOOK.md) § 2.
 
 ---

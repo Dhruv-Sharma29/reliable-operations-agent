@@ -115,14 +115,24 @@ refused, and `DROP TABLE audit_events` is refused. A store created with trust au
 place on the next start (`test_a_running_trust_auth_store_is_migrated_in_place`); the development
 store kept all 558 of its audit events.
 
-**What it still does not cover.** The default sandbox still runs everything as one OS user (root
-here), and then the agent can read both passwords, so the separation only holds when
-`AGENT_OS_UID` names a different user. Only the executor and the audit store have been exercised as
-that user: the sandbox's own processes, which the agent's action tools start and stop, still run as
-the setup user, so a full non-root deployment would need the sandbox to run under the agent's uid
-or the actions to go through a privileged helper. Root on the host can still do anything. The
-sandbox's own database keeps trust auth, on purpose: it is the system under repair, and the agent's
-read tools are meant to see all of it.
+**A separate agent user (2026-10-26).** `sandbox/deploy.py` runs the sandbox and the agent as one
+unprivileged OS user. As root, `prepare --agent-uid N` starts the audit store, applies its schema,
+and hands `agent.pw` and the sandbox's directories, including its PostgreSQL cluster, to uid N.
+`exec` then drops to uid N, as a service manager would. The agent restarts, scales and reconfigures
+a sandbox it owns, so it needs no privileged helper; the audit store's cluster runs as `nobody` and
+its superuser password stays with root. All 30 incidents were run this way as uid 1000 through the
+executor (`baseline-exec`: the runbook's decisions, every action through policy, approval and audit)
+and all succeed once a catalogue bug was fixed, the same as the baseline as root
+(`results/summary/nonroot-deployment.md`). `tests/test_deploy.py` checks it end to end: every sandbox
+process runs as the agent's uid, the audit rows name `ops-agent` and `eval-approver`, and the agent's
+user can stop its own database but can neither stop nor signal the audit store.
+
+**What it still does not cover.** The default sandbox, started without `prepare`, still runs
+everything as one OS user (root here), and then the agent can read both passwords. The LLM agents
+were not run as the separate user (they need the model server; their path to the executor and the
+store is the same code). Root on the host can still do anything. The sandbox's own database keeps
+trust auth, on purpose: it is the system under repair, and the agent's read tools are meant to see
+all of it.
 
 **Fail closed.** Any failure to reach the store raises `store.AuditUnavailable`. Because request,
 decision and `executing` are all written before the effect, an unreachable store means nothing
