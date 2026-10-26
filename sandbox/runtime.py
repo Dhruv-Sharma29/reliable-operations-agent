@@ -14,8 +14,8 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import secrets
 import signal
-import stat
 import subprocess
 import sys
 import time
@@ -24,6 +24,7 @@ from pathlib import Path
 
 import httpx
 import psycopg
+from psycopg import sql
 
 from . import paths, state
 
@@ -123,10 +124,7 @@ class Runtime:
         permission changes on disk)."""
         if os.geteuid() != 0:
             return []
-        groups = set()
-        for parent in [paths.PG_DIR, *paths.PG_DIR.parents, paths.PG_BIN, *paths.PG_BIN.parents]:
-            if parent.exists() and not parent.stat().st_mode & stat.S_IXOTH:
-                groups.add(parent.stat().st_gid)
+        groups = set(paths.traverse_groups(paths.PG_DIR)) | set(paths.traverse_groups(paths.PG_BIN))
         group_arg = ",".join(str(g) for g in sorted(groups)) or "65534"
         return ["setpriv", "--reuid=65534", "--regid=65534", f"--groups={group_arg}"]
 
@@ -138,7 +136,9 @@ class Runtime:
     def _cluster_running(self, port: int) -> bool:
         return self._pg("pg_isready", "-h", "127.0.0.1", "-p", str(port), check=False).returncode == 0
 
-    def _cluster_start(self, pg_dir: Path, port: int, max_connections: int) -> None:
+    def _cluster_start(self, pg_dir: Path, port: int, max_connections: int, superuser_password: str | None = None) -> None:
+        """With `superuser_password`, a new cluster requires scram-sha-256 for every connection;
+        without it, loopback connections are trusted (the sandbox's own database)."""
         if not (paths.PG_BIN / "postgres").exists():
             sys.exit(f"Postgres binaries not found at {paths.PG_BIN}: on Linux run scripts/setup_postgres.sh; "
                      "on macOS `brew install postgresql@16` (or set PG_BIN)")
@@ -147,7 +147,18 @@ class Runtime:
             pg_dir.mkdir(parents=True, exist_ok=True)
             if os.geteuid() == 0:
                 os.chown(pg_dir, 65534, 65534)
-            self._pg("initdb", "-D", str(data), "-U", "postgres", "--auth=trust", "-E", "UTF8", f"--locale={paths.PG_LOCALE}")
+            auth = ["--auth=trust"]
+            if superuser_password:
+                pwfile = pg_dir / "initdb.pw"   # initdb runs as the cluster's user, so it must be able to read it
+                pwfile.write_text(superuser_password)
+                pwfile.chmod(0o600)
+                if os.geteuid() == 0:
+                    os.chown(pwfile, 65534, 65534)
+                auth = ["--auth=scram-sha-256", f"--pwfile={pwfile}"]
+            try:
+                self._pg("initdb", "-D", str(data), "-U", "postgres", *auth, "-E", "UTF8", f"--locale={paths.PG_LOCALE}")
+            finally:
+                (pg_dir / "initdb.pw").unlink(missing_ok=True)
         if not self._cluster_running(port):
             opts = (f"-p {port} -k {pg_dir} -c listen_addresses=127.0.0.1 "
                     f"-c max_connections={max_connections} -c superuser_reserved_connections=3")
@@ -178,12 +189,46 @@ class Runtime:
     def agent_db_running(self) -> bool:
         return self._cluster_running(paths.AGENT_PG_PORT)
 
+    def _agent_secrets(self) -> None:
+        """One random password per role, each in a 0600 file. The superuser's belongs to the user
+        running setup; the agent role's to $AGENT_OS_UID (default: the same user). Run the agent as a
+        separate OS user and it can log in as `agent` but can't read the superuser's password."""
+        d = paths.AGENT_SECRETS
+        d.mkdir(parents=True, exist_ok=True)
+        d.chmod(0o711)   # others may open a file they own, but not list the directory
+        for role in ("postgres", "agent"):
+            f = d / f"{role}.pw"
+            if not f.exists():
+                fd = os.open(f, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+                os.write(fd, secrets.token_urlsafe(32).encode())
+                os.close(fd)
+        uid = int(os.environ.get("AGENT_OS_UID", os.geteuid()))
+        if (d / "agent.pw").stat().st_uid != uid:
+            os.chown(d / "agent.pw", uid, -1)
+
+    def _require_password_auth(self, pg_dir: Path, port: int) -> None:
+        """Migrate a store created with trust auth (before 2026-10-26): set the superuser's password
+        while trust still lets us in, then require scram-sha-256 for every connection."""
+        hba = pg_dir / "data" / "pg_hba.conf"
+        rules = [line.split() for line in hba.read_text().splitlines() if line.strip() and not line.lstrip().startswith("#")]
+        if not any(r[-1] == "trust" for r in rules):
+            return
+        with psycopg.connect(paths.dsn("postgres", "agent-setup", port=port), dbname="postgres", autocommit=True) as conn:
+            conn.execute(sql.SQL("ALTER ROLE postgres PASSWORD {}").format(paths.agent_secret("postgres")))
+        owner = hba.stat()
+        hba.write_text("local all all scram-sha-256\nhost all all 127.0.0.1/32 scram-sha-256\n"
+                       "host all all ::1/128 scram-sha-256\n")
+        os.chown(hba, owner.st_uid, owner.st_gid)
+        self._pg("pg_ctl", "-D", str(pg_dir / "data"), "reload")
+
     def agent_db_start(self) -> None:
-        self._cluster_start(paths.AGENT_PG_DIR, paths.AGENT_PG_PORT, 20)
-        with psycopg.connect(paths.dsn("postgres", "agent-setup", port=paths.AGENT_PG_PORT), dbname="postgres",
-                             autocommit=True) as conn:
+        self._agent_secrets()
+        self._cluster_start(paths.AGENT_PG_DIR, paths.AGENT_PG_PORT, 20, superuser_password=paths.agent_secret("postgres"))
+        self._require_password_auth(paths.AGENT_PG_DIR, paths.AGENT_PG_PORT)
+        with psycopg.connect(paths.agent_store_dsn("postgres", "agent-setup"), dbname="postgres", autocommit=True) as conn:
             if not conn.execute("SELECT 1 FROM pg_roles WHERE rolname='agent'").fetchone():
                 conn.execute("CREATE ROLE agent LOGIN")
+            conn.execute(sql.SQL("ALTER ROLE agent PASSWORD {}").format(paths.agent_secret("agent")))
             # Owns the agent store; can't log in, so the agent process can't act as it (agent/store.py).
             if not conn.execute("SELECT 1 FROM pg_roles WHERE rolname='audit_owner'").fetchone():
                 conn.execute("CREATE ROLE audit_owner NOLOGIN")

@@ -69,7 +69,8 @@ def ensure() -> None:
     global _applied_for
     store.ensure()
     if _applied_for != store.generation:
-        store.apply_schema(SCHEMA, {"incidents": "SELECT, INSERT, UPDATE", "incident_events": "SELECT, INSERT"})
+        if store.is_admin():   # a separate agent OS user relies on `python -m agent.store init` having run
+            store.apply_schema(SCHEMA, {"incidents": "SELECT, INSERT, UPDATE", "incident_events": "SELECT, INSERT"})
         _applied_for = store.generation
 
 

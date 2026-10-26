@@ -21,6 +21,9 @@ PG_DIR = RUN / "pg"
 # sandbox's failure domain: an incident that exhausts or breaks the app database must not take
 # away the agent's audit trail or its ability to record approvals.
 AGENT_PG_DIR = RUN / "agent-pg"
+# Passwords for the agent's store, one file per role (sandbox/runtime.py::agent_db_start). The
+# superuser's stays with the OS user that runs setup; the agent role's goes to $AGENT_OS_UID.
+AGENT_SECRETS = RUN / "agent-secrets"
 
 def _pg_bin() -> Path:
     """PostgreSQL binaries: $PG_BIN if set, else the user-space copy from scripts/setup_postgres.sh
@@ -56,8 +59,26 @@ PAYMENTS_URL = f"http://127.0.0.1:{PAYMENTS_PORT}"
 
 
 def dsn(user: str, application_name: str, port: int = PG_PORT) -> str:
-    # Trust auth on loopback only: acceptable for a local sandbox, never for a real deployment.
+    # The sandbox's own database uses trust auth on loopback: it is the system under repair, and the
+    # agent's read tools are meant to see all of it. The agent's store needs a password (agent_store_dsn).
     return f"host=127.0.0.1 port={port} dbname=ops user={user} application_name={application_name} connect_timeout=2"
+
+
+def agent_secret(role: str) -> str:
+    """Raises PermissionError when this OS user isn't meant to act as `role` (e.g. the agent user
+    reading the superuser's password)."""
+    return (AGENT_SECRETS / f"{role}.pw").read_text().strip()
+
+
+def agent_store_dsn(user: str, application_name: str) -> str:
+    return dsn(user, application_name, port=AGENT_PG_PORT) + f" password={agent_secret(user)}"
+
+
+def traverse_groups(path: Path) -> list[int]:
+    """Groups of the ancestors of `path` that other users can't traverse: what a process running as
+    another user (Postgres as `nobody`, a separate agent user) needs to reach it, without changing
+    any permission on disk."""
+    return sorted({p.stat().st_gid for p in [path, *path.parents] if p.exists() and not p.stat().st_mode & 0o001})
 
 
 def ensure_dirs() -> None:

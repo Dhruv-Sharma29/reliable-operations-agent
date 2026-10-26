@@ -12,11 +12,21 @@ M4 builds workflow state and idempotency on the same tables.
 Ownership: the database and every table belong to `audit_owner`, a role that can't log in, and the
 schema is applied by the cluster's superuser (apply_schema). The `agent` role gets only the rows it
 needs to write: it can append audit events but not change, delete or truncate them, and it can't
-drop or disable the append-only triggers, because only a table's owner can."""
+drop or disable the append-only triggers, because only a table's owner can.
+
+Authentication: every connection to this store needs a password (scram-sha-256), one per role, in
+files under .run/agent-secrets (sandbox/runtime.py::agent_db_start). Run the agent as a different
+OS user from the one that set the store up (AGENT_OS_UID) and it can log in as `agent` only: it
+can't read the superuser's password, so even a fully compromised agent process can't rewrite or
+drop the log. In that mode the store is set up beforehand with `python -m agent.store init`.
+
+    python -m agent.store init     # as the setup user: start the store, apply both schemas"""
 
 from __future__ import annotations
 
+import os
 import subprocess
+import sys
 
 import psycopg
 
@@ -74,17 +84,27 @@ _ready = False
 generation = 0   # bumped each time ensure() (re)initialises the store; lets dependants re-apply their schema
 
 
+def is_admin() -> bool:
+    """Whether this process may act as the store's superuser: the setup user, and the agent too
+    when both run as one OS user (the default sandbox). A separate agent user may not."""
+    return os.access(paths.AGENT_SECRETS / "postgres.pw", os.R_OK)
+
+
 def ensure() -> None:
-    """Start the agent's database if needed and apply the schema (once per process)."""
+    """Start the agent's database if needed and apply the schema (once per process). A separate
+    agent OS user can do neither: it only checks that the store is up and accepts its login."""
     global _ready, generation
     if _ready:
         return
     from sandbox.runtime import Runtime
     try:
-        rt = Runtime()
-        if not rt.agent_db_running():
-            rt.agent_db_start()
-        apply_schema(SCHEMA, AGENT_GRANTS)
+        if is_admin() or not paths.AGENT_SECRETS.exists():
+            # Even when it is already running: agent_db_start is idempotent, and it is what
+            # creates the passwords and migrates a store started before password auth.
+            Runtime().agent_db_start()
+            apply_schema(SCHEMA, AGENT_GRANTS)
+        else:
+            _connect().close()
     except (psycopg.Error, OSError, subprocess.CalledProcessError) as e:
         raise AuditUnavailable(f"agent store unavailable: {type(e).__name__}: {str(e)[:200]}") from e
     _ready = True
@@ -95,7 +115,7 @@ def apply_schema(sql: str, grants: dict[str, str]) -> None:
     """Run DDL as the cluster superuser, give the tables to OWNER, and grant the agent exactly
     `grants` (table -> privileges) plus the sequences its INSERTs need. Idempotent, and it also
     migrates a store created before 2026-10-23, when the agent role owned everything."""
-    with psycopg.connect(paths.dsn("postgres", "agent-setup", port=paths.AGENT_PG_PORT), dbname=DB,
+    with psycopg.connect(paths.agent_store_dsn("postgres", "agent-setup"), dbname=DB,
                          autocommit=True) as conn, conn.transaction():
         conn.execute(f"ALTER DATABASE {DB} OWNER TO {OWNER}")
         conn.execute(sql)
@@ -107,7 +127,7 @@ def apply_schema(sql: str, grants: dict[str, str]) -> None:
 
 
 def _connect() -> psycopg.Connection:
-    return psycopg.connect(paths.dsn("agent", "ops-agent", port=paths.AGENT_PG_PORT), dbname=DB, autocommit=True)
+    return psycopg.connect(paths.agent_store_dsn("agent", "ops-agent"), dbname=DB, autocommit=True)
 
 
 def connect() -> psycopg.Connection:
@@ -116,3 +136,12 @@ def connect() -> psycopg.Connection:
         return _connect()
     except psycopg.OperationalError as e:
         raise AuditUnavailable(f"agent store unavailable: {str(e)[:200]}") from e
+
+
+if __name__ == "__main__":
+    if sys.argv[1:] != ["init"]:
+        sys.exit(__doc__.splitlines()[-1].strip())
+    from agent import workflow
+    workflow.ensure()   # store schema, then the workflow's
+    print(f"agent store ready on port {paths.AGENT_PG_PORT}; agent password owned by uid "
+          f"{(paths.AGENT_SECRETS / 'agent.pw').stat().st_uid}")

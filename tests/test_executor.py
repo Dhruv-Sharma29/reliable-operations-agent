@@ -110,7 +110,7 @@ def test_audit_log_is_append_only(executor, sql):
 
 def test_append_only_trigger_still_guards_the_owner_side():
     """Defence in depth: even a role allowed to UPDATE is stopped by the trigger."""
-    with psycopg.connect(paths.dsn("postgres", "test", port=paths.AGENT_PG_PORT), dbname=store.DB, autocommit=True) as conn, \
+    with psycopg.connect(paths.agent_store_dsn("postgres", "test"), dbname=store.DB, autocommit=True) as conn, \
             pytest.raises(psycopg.errors.RaiseException):
         conn.execute("UPDATE audit_events SET event = 'x'")
 
