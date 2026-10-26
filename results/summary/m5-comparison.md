@@ -39,6 +39,11 @@ llama.cpp, temperature 0, a stand-in approver for approval-required actions.
   idle shared GPU (~42 tokens/s); earlier runs in this project had ~5.5 tokens/s under other users'
   load, about 8x slower. The simple and durable rows are comparable with each other only.
 
+**Replicate, 2026-10-26.** Both agents were re-run on all 30 incidents as an unprivileged OS user,
+with the catalogue's `dev-bad_config-0` port bug fixed: simple 12/30 (p = 0.45 against the row
+above), durable 16/30 (p = 0.69). The corrected `dev-bad_config-0` came out right 3/3 for each agent,
+as here, so these numbers stand (`nonroot-deployment.md`).
+
 ## Durable agent in evaluation
 
 The runner verifies health itself, so the durable responder skips the workflow's own VERIFYING
