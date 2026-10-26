@@ -38,9 +38,9 @@ Expect **62 passed**. What they cover:
 | `test_units.py` | 13 | the scorer: false alarm fails on any change, escalate case needs escalation and no change; actions refuse out-of-scope targets |
 | `test_llm_agent.py` | 15 | the loop against a scripted fake model: citations, budgets, forced finalisation, server errors, truncated replies |
 
-The other 36 tests (`test_sandbox.py`, `test_executor.py`, `test_durability.py`) start real
+The other 49 tests (`test_sandbox.py`, `test_executor.py`, `test_durability.py`, `test_store_auth.py`) start real
 PostgreSQL instances and app processes. They **skip** when PostgreSQL hasn't been unpacked
-(`reason="run scripts/setup_postgres.sh"`). Once it has, plain `uv run pytest` runs all 98 and
+(`reason="run scripts/setup_postgres.sh"`). Once it has, plain `uv run pytest` runs all 111 and
 starts those daemons on ports 17xxx — see [RUNBOOK.md](RUNBOOK.md) § 2.
 
 ---

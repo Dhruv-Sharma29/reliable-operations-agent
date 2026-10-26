@@ -163,6 +163,10 @@ The model only **proposes** a tool name and arguments. `agent/executor.py` decid
    closed**: no reachable audit store, no action. It used to share the sandbox's database, so a
    connection-exhaustion incident disabled the agent's control plane and crashed the evaluation
    ([decision record](docs/01-architecture.md)).
+6. The agent's database role **doesn't own** the audit tables, so it can't drop the triggers, and
+   the store **requires a password for every role**. Run the agent as its own OS user
+   (`AGENT_OS_UID`) and it can't read the superuser's password; in the default single-user
+   sandbox it can ([details and limits](docs/03-permissions-and-audit.md)).
 
 **Audit trace sample** (`eval/audit_sample.py`, [output](results/summary/audit_trace_sample.json)):
 full action records and timestamped events, read back from the store, for every path:
@@ -303,7 +307,7 @@ says *what*.
 ```bash
 scripts/setup_postgres.sh                     # PostgreSQL 16 (Ubuntu arm64) into .tools/, user space only
 uv sync
-uv run pytest                                 # 98 tests: scoring, schemas, guardrails, agent loop, policy, executor, durability, sandbox
+uv run pytest                                 # 111 tests: scoring, schemas, guardrails, agent loop, policy, executor, durability, sandbox
 uv run python -m sandbox.runtime up           # or: reset [--workers N] | status | down | pg-stop
 uv run python -m eval.run --responder noop --split dev        # control
 uv run python -m eval.run --responder baseline --split dev

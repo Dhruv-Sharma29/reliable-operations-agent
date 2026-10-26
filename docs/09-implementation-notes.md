@@ -148,8 +148,15 @@ The `agent` role owned `agentstate` and applied the schema itself, so the agent'
 could drop or disable the append-only triggers, or drop `audit_events` outright (shown by running
 the new tests on the old code). The database and tables now belong to `audit_owner` (no login),
 the cluster superuser applies the schema (`store.apply_schema`), and the agent gets only the row
-privileges it needs ([03](03-permissions-and-audit.md) § Least privilege for the agent role). Not
-covered: a hostile process on the same host can still connect as the superuser through trust auth.
+privileges it needs ([03](03-permissions-and-audit.md) § Least privilege for the agent role).
+Follow-up, 2026-10-26: the store used trust auth, so a process on the same host could still log in as
+the superuser. It now requires per-role passwords; an agent run as its own OS user can't reach the
+superuser's, and an existing store is migrated in place ([03](03-permissions-and-audit.md) § Password
+auth). The first version only migrated a store that was stopped: `ensure()` skipped setup when
+the store was already running, so the running development store kept trust auth. That was caught
+by migrating it by hand, and `test_a_running_trust_auth_store_is_migrated_in_place` now covers it. The same
+work fixed an older bug: Postgres run as `nobody` got only the groups needed to reach its run
+directory, not its binaries, so a `SANDBOX_RUN_DIR` outside the repo failed to load `libpq`.
 
 ### 26. A supervisor resumes unfinished incidents (added 2026-10-23)
 Crash recovery used to need a manual `workflow.run(...)` per incident; `resume_all()` existed but

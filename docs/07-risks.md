@@ -60,10 +60,11 @@ the injection demo runs with **no** approver, which is the case the gate exists 
 
 ### R7 — Identity and append-only are local-sandbox strength *(medium if over-read)*
 
-Requester and approver are strings, and loopback PostgreSQL uses trust auth, so a hostile process on
-the host could connect as the superuser (`sandbox/paths.py::dsn`). The `agent` role itself no longer
-owns the audit tables and can't drop or disable their triggers (2026-10-23, `agent/store.py`,
-[03](03-permissions-and-audit.md)).
+Requester and approver are strings. The `agent` role no longer owns the audit tables and can't drop
+or disable their triggers (2026-10-23). Since 2026-10-26 the store requires a password for every role,
+and an agent running as its own OS user (`AGENT_OS_UID`) can't read the superuser's
+([03](03-permissions-and-audit.md) § Password auth). In the default single-user sandbox it still
+can, and root on the host can do anything.
 
 **Mitigation:** the triggers protect against the executor's own bugs, and that is what is claimed.
 A deployment needs authenticated principals and a writer role without DDL rights

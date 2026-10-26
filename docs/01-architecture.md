@@ -233,7 +233,7 @@ agent/tools/  schemas.py, read.py, act.py
 runbooks/     RUNBOOKS.md (human text, also the `runbook` tool) and baseline.py (scripted + noop responders)
 eval/         run.py, verify.py, summarize.py, summarize_m2.py, compare.py, report_ui.py,
               injection_demo.py, crash_demo.py, audit_sample.py
-tests/        98 tests; test_sandbox/test_executor/test_durability start PostgreSQL and skip without it
+tests/        111 tests; test_sandbox/test_executor/test_durability/test_store_auth start PostgreSQL and skip without it
 scripts/      setup_postgres.sh: PostgreSQL 16 unpacked into .tools/ (user space)
 results/      raw/ (one JSONL per run), raw/superseded/ (kept as evidence), summary/, ui/m5_report.html, *.log
 ```

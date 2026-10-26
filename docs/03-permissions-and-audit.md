@@ -102,11 +102,27 @@ the `agent` role owned everything, and the same test on the old code shows `DROP
 (`test_append_only_trigger_still_guards_the_owner_side`). `results/summary/audit_trace_sample.json`
 predates the change; a re-run reports "permission denied" rather than the trigger's message.
 
-**What it still does not cover.** Loopback connections use trust auth (`sandbox/paths.py::dsn`), and
-the agent and the setup code run as the same OS user, so a fully compromised agent process could
-still connect as the cluster superuser. The change protects against bugs and injected SQL on the
-agent's own connection, not against a hostile process on the same host. That needs a separate OS
-user for the store, password or certificate auth, or an external log sink.
+**Password auth and a separate agent user (2026-10-26).** The store used trust auth on loopback,
+so any local process, including a compromised agent, could log in as the cluster superuser and
+rewrite the log. Every role now needs a password (scram-sha-256 in `pg_hba.conf`). There is one
+random password per role, in a 0600 file under `.run/agent-secrets/`: the superuser's belongs to the
+OS user that sets the store up, and the agent role's to `$AGENT_OS_UID` (`sandbox/runtime.py::agent_db_start`).
+When the agent runs as its own OS user, it can log in as `agent` and nothing else.
+`tests/test_store_auth.py::test_agent_as_its_own_os_user_can_act_but_cannot_reach_the_superuser`
+runs the executor as uid 64000. The action succeeds with its full audit trail. That user can't read
+the superuser's password or the store's data directory, a password-less superuser login is
+refused, and `DROP TABLE audit_events` is refused. A store created with trust auth is migrated in
+place on the next start (`test_a_running_trust_auth_store_is_migrated_in_place`); the development
+store kept all 558 of its audit events.
+
+**What it still does not cover.** The default sandbox still runs everything as one OS user (root
+here), and then the agent can read both passwords, so the separation only holds when
+`AGENT_OS_UID` names a different user. Only the executor and the audit store have been exercised as
+that user: the sandbox's own processes, which the agent's action tools start and stop, still run as
+the setup user, so a full non-root deployment would need the sandbox to run under the agent's uid
+or the actions to go through a privileged helper. Root on the host can still do anything. The
+sandbox's own database keeps trust auth, on purpose: it is the system under repair, and the agent's
+read tools are meant to see all of it.
 
 **Fail closed.** Any failure to reach the store raises `store.AuditUnavailable`. Because request,
 decision and `executing` are all written before the effect, an unreachable store means nothing

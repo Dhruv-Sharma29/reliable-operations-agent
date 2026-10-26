@@ -32,11 +32,27 @@ system-wide, and `rm -rf .tools` undoes it. Idempotent. When run as root, Postgr
 uv run pytest
 ```
 
-**98 tests.** With PostgreSQL unpacked, the 36 integration tests run: `test_sandbox.py` (8) starts
-the sandbox and injects real faults; `test_executor.py` (20) exercises the audit store, including
-with the sandbox database stopped; `test_durability.py` (8) kills processes with `os._exit` between
-an effect and its record. Tests use port base 17000 and `.run-test/` (`tests/conftest.py`), so they
+**111 tests.** With PostgreSQL unpacked, the 49 integration tests run: `test_sandbox.py` (8) starts
+the sandbox and injects real faults; `test_executor.py` (25) exercises the audit store, including
+with the sandbox database stopped; `test_durability.py` (9) kills processes with `os._exit` between
+an effect and its record; `test_store_auth.py` (7) checks the store's password auth, and, when run as
+root, runs the executor as a separate uid. Tests use port base 17000 and `.run-test/` (`tests/conftest.py`), so they
 don't touch a development sandbox or an evaluation in progress.
+
+### The audit store's credentials
+
+The agent's store (port base + 433) requires a password for every role. On first start it writes
+one random password per role to `.run/agent-secrets/` (0600 files): `postgres.pw` for the user that
+set it up, `agent.pw` for `$AGENT_OS_UID` (default: the same user). To run the agent as its own OS user:
+
+```bash
+AGENT_OS_UID=<agent uid> uv run python -m agent.store init   # as the setup user: start, schema, hand over agent.pw
+# then start the agent as that uid; it logs in as `agent` and can't read postgres.pw
+```
+
+A store created before 2026-10-26 (trust auth) is migrated on its next start, data kept. Rotation
+isn't automated: deleting `.run/agent-secrets/` on its own locks setup out of the existing store, so
+delete `.run/agent-pg/` with it (which drops the log) or change the passwords with `ALTER ROLE` first.
 
 ## 3. The sandbox
 
