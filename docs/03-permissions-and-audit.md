@@ -122,15 +122,15 @@ and hands `agent.pw` and the sandbox's directories, including its PostgreSQL clu
 a sandbox it owns, so it needs no privileged helper; the audit store's cluster runs as `nobody` and
 its superuser password stays with root. All 30 incidents were run this way as uid 1000 through the
 executor (`baseline-exec`: the runbook's decisions, every action through policy, approval and audit)
-and all succeed once a catalogue bug was fixed, the same as the baseline as root
-(`results/summary/nonroot-deployment.md`). `tests/test_deploy.py` checks it end to end: every sandbox
+and all succeed once a catalogue bug was fixed, the same as the baseline as root. Both LLM agents
+were also re-run that way: simple 12/30 and durable 16/30, not measurably different from their
+published 15/30 and 14/30 (exact McNemar p = 0.45 and 0.69; `results/summary/nonroot-deployment.md`). `tests/test_deploy.py` checks it end to end: every sandbox
 process runs as the agent's uid, the audit rows name `ops-agent` and `eval-approver`, and the agent's
 user can stop its own database but can neither stop nor signal the audit store.
 
 **What it still does not cover.** The default sandbox, started without `prepare`, still runs
-everything as one OS user (root here), and then the agent can read both passwords. The LLM agents
-were not run as the separate user (they need the model server; their path to the executor and the
-store is the same code). Root on the host can still do anything. The sandbox's own database keeps
+everything as one OS user (root here), and then the agent can read both passwords. Root on the
+host can still do anything. The sandbox's own database keeps
 trust auth, on purpose: it is the system under repair, and the agent's read tools are meant to see
 all of it.
 

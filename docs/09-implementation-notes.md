@@ -167,8 +167,9 @@ of the cluster they act on. And `dev-bad_config-0`'s "wrong" database port, `PG_
 agent store's port since the store got its own instance. With the store up, the API reached a live
 server instead of a closed port. The scripted baseline never saw it, because it runs without the
 store. Every `llm-act` and `durable` run did, and diagnosed that case correctly 5 times in 6 anyway.
-The port is now `PG_PORT + 2`, guarded by `test_bad_config_ports_are_not_used_by_the_sandbox`; the
-published LLM numbers were not re-run.
+The port is now `PG_PORT + 2`, guarded by `test_bad_config_ports_are_not_used_by_the_sandbox`.
+Re-run with the fixed port, both LLM agents got that case right 3 times in 3, as in their published
+runs, so the published numbers stand (`results/summary/nonroot-deployment.md`).
 
 ### 26. A supervisor resumes unfinished incidents (added 2026-10-23)
 Crash recovery used to need a manual `workflow.run(...)` per incident; `resume_all()` existed but
