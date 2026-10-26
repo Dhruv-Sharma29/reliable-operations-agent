@@ -118,23 +118,26 @@ def _read_pid(instance: str) -> dict | None:
 class Runtime:
     # --- Postgres --------------------------------------------------------------------------
 
-    def _pg_env_prefix(self) -> list[str]:
-        """Postgres refuses to run as root. When root, run it as `nobody`, adding the group of any
-        ancestor directory, of its data or its binaries, that is not world-traversable (no
-        permission changes on disk)."""
+    def _pg_env_prefix(self, pg_dir: Path) -> list[str]:
+        """Postgres refuses to run as root. When root, run it as the owner of the cluster's
+        directory: `nobody` for a cluster root created, the agent's user for a sandbox handed to it
+        (sandbox/deploy.py). Adds the group of any ancestor directory, of its data or its binaries,
+        that is not world-traversable (no permission changes on disk)."""
         if os.geteuid() != 0:
             return []
-        groups = set(paths.traverse_groups(paths.PG_DIR)) | set(paths.traverse_groups(paths.PG_BIN))
-        group_arg = ",".join(str(g) for g in sorted(groups)) or "65534"
-        return ["setpriv", "--reuid=65534", "--regid=65534", f"--groups={group_arg}"]
+        owner = pg_dir.stat() if pg_dir.exists() and pg_dir.stat().st_uid != 0 else None
+        uid, gid = (owner.st_uid, owner.st_gid) if owner else (65534, 65534)
+        groups = set(paths.traverse_groups(pg_dir)) | set(paths.traverse_groups(paths.PG_BIN))
+        group_arg = ",".join(str(g) for g in sorted(groups)) or str(gid)
+        return ["setpriv", f"--reuid={uid}", f"--regid={gid}", f"--groups={group_arg}"]
 
-    def _pg(self, tool: str, *args: str, check: bool = True) -> subprocess.CompletedProcess:
+    def _pg(self, tool: str, *args: str, pg_dir: Path = paths.PG_DIR, check: bool = True) -> subprocess.CompletedProcess:
         env = {**os.environ, "LD_LIBRARY_PATH": str(paths.PG_LIB)}
-        cmd = [*self._pg_env_prefix(), str(paths.PG_BIN / tool), *args]
+        cmd = [*self._pg_env_prefix(pg_dir), str(paths.PG_BIN / tool), *args]
         return subprocess.run(cmd, env=env, capture_output=True, text=True, check=check)
 
-    def _cluster_running(self, port: int) -> bool:
-        return self._pg("pg_isready", "-h", "127.0.0.1", "-p", str(port), check=False).returncode == 0
+    def _cluster_running(self, pg_dir: Path, port: int) -> bool:
+        return self._pg("pg_isready", "-h", "127.0.0.1", "-p", str(port), pg_dir=pg_dir, check=False).returncode == 0
 
     def _cluster_start(self, pg_dir: Path, port: int, max_connections: int, superuser_password: str | None = None) -> None:
         """With `superuser_password`, a new cluster requires scram-sha-256 for every connection;
@@ -156,20 +159,21 @@ class Runtime:
                     os.chown(pwfile, 65534, 65534)
                 auth = ["--auth=scram-sha-256", f"--pwfile={pwfile}"]
             try:
-                self._pg("initdb", "-D", str(data), "-U", "postgres", *auth, "-E", "UTF8", f"--locale={paths.PG_LOCALE}")
+                self._pg("initdb", "-D", str(data), "-U", "postgres", *auth, "-E", "UTF8", f"--locale={paths.PG_LOCALE}",
+                         pg_dir=pg_dir)
             finally:
                 (pg_dir / "initdb.pw").unlink(missing_ok=True)
-        if not self._cluster_running(port):
+        if not self._cluster_running(pg_dir, port):
             opts = (f"-p {port} -k {pg_dir} -c listen_addresses=127.0.0.1 "
                     f"-c max_connections={max_connections} -c superuser_reserved_connections=3")
-            self._pg("pg_ctl", "-D", str(data), "-l", str(pg_dir / "postgres.log"), "-o", opts, "-w", "start")
+            self._pg("pg_ctl", "-D", str(data), "-l", str(pg_dir / "postgres.log"), "-o", opts, "-w", "start", pg_dir=pg_dir)
 
     def _cluster_stop(self, pg_dir: Path, port: int) -> None:
-        if self._cluster_running(port):
-            self._pg("pg_ctl", "-D", str(pg_dir / "data"), "-m", "fast", "-w", "stop")
+        if self._cluster_running(pg_dir, port):
+            self._pg("pg_ctl", "-D", str(pg_dir / "data"), "-m", "fast", "-w", "stop", pg_dir=pg_dir)
 
     def postgres_running(self) -> bool:
-        return self._cluster_running(paths.PG_PORT)
+        return self._cluster_running(paths.PG_DIR, paths.PG_PORT)
 
     def postgres_start(self) -> None:
         self._cluster_start(paths.PG_DIR, paths.PG_PORT, paths.PG_MAX_CONNECTIONS)
@@ -187,7 +191,7 @@ class Runtime:
     # --- agent state database (not part of the sandbox: reset and incidents never touch it) ---
 
     def agent_db_running(self) -> bool:
-        return self._cluster_running(paths.AGENT_PG_PORT)
+        return self._cluster_running(paths.AGENT_PG_DIR, paths.AGENT_PG_PORT)
 
     def _agent_secrets(self) -> None:
         """One random password per role, each in a 0600 file. The superuser's belongs to the user
@@ -219,7 +223,7 @@ class Runtime:
         hba.write_text("local all all scram-sha-256\nhost all all 127.0.0.1/32 scram-sha-256\n"
                        "host all all ::1/128 scram-sha-256\n")
         os.chown(hba, owner.st_uid, owner.st_gid)
-        self._pg("pg_ctl", "-D", str(pg_dir / "data"), "reload")
+        self._pg("pg_ctl", "-D", str(pg_dir / "data"), "reload", pg_dir=pg_dir)
 
     def agent_db_start(self) -> None:
         self._agent_secrets()
@@ -421,9 +425,11 @@ def main() -> None:
     elif args.command == "reset":
         rt.reset(workers=args.workers)
     elif args.command == "pg-stop":
+        from agent import store
         rt.down()
         rt.postgres_stop()
-        rt.agent_db_stop()
+        if store.is_admin():   # the agent's own OS user can't stop the audit store, by design
+            rt.agent_db_stop()
     for row in rt.status():
         print(json.dumps(row))
 
